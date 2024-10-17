@@ -612,7 +612,7 @@ function EmployeeRegistration() {
               />
             </Stack>
 
-            {state.errors.passwordError || state.errors.password2Error && (
+            {(state.errors.passwordError || state.errors.password2Error) && (
               <div>
                 <ul style={{ color: '#f44336', textAlign: 'left', paddingLeft: '20px', margin: '5px 0' }}>
                   <li>One lowercase character</li>
