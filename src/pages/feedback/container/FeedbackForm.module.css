@@ -1,0 +1,64 @@
+/* FeedbackForm.module.css */
+
+.formContainer {
+    padding: 20px !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center!important;
+    height: 100vh !important; /* Adjust as needed */
+  }
+  
+  .formWrapper {
+    width: 100%;
+    max-width: 400px; /* Adjust as needed */
+  }
+  
+  .formItem {
+    margin-bottom: 20px;
+  }
+  
+  .submitButton {
+    margin-top: 20px;
+  }
+  
+  /* Additional styles for form elements */
+  
+  input[type="text"],
+  input[type="email"],
+  textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+  }
+  
+  input[type="text"]:focus,
+  input[type="email"]:focus,
+  textarea:focus {
+    outline: none;
+    border-color: #5c6ac4;
+  }
+  
+  label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
+  
+  .submitButton {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #5c6ac4;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .submitButton:hover {
+    background-color: #b74567;
+  }
+  

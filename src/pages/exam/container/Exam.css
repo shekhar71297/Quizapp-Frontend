@@ -1,0 +1,74 @@
+/* For screens up to 576px */
+@media screen and (min-width: 375px) and (max-width: 576px) {
+  .chip {
+    padding-top: 16%;
+    /* Adjust the padding value as needed */
+  }
+}
+
+/* For screens between 577px and 768px */
+@media screen and (min-width: 577px) and (max-width: 768px) {
+  .chip {
+    padding-top: 12%;
+    /* Adjust the padding value as needed */
+  }
+}
+
+/* For screens between 769px and 992px */
+@media screen and (min-width: 769px) and (max-width: 992px) {
+  .chip {
+    padding-top: 10%;
+    /* Adjust the padding value as needed */
+  }
+}
+
+/* For screens between 993px and 1200px */
+@media screen and (min-width: 993px) and (max-width: 1200px) {
+  .chip {
+    padding-top: 8%;
+    /* Adjust the padding value as needed */
+  }
+}
+
+/* For screens larger than 1200px */
+@media screen and (min-width: 1201px) {
+  .chip {
+    padding-top: 6%;
+    /* Adjust the padding value as needed */
+  }
+}
+
+.accordion-summary {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.align-question {
+  text-align: center;
+}
+
+.marked-answer {
+  background-color: #2c387eb8;
+  list-style-type: none;
+  box-shadow: inset 0px 0px 4px black;
+  padding: 10px;
+  margin-bottom: 10px;
+  color: white;
+  margin-left: -30px;
+}
+
+.option-list {
+  list-style-type: none;
+  box-shadow: inset 0px 0px 4px black;
+  padding: 10px;
+  margin-bottom: 10px;
+  margin-left: -30px;
+}
+.close-btn{
+  margin-top: 20px;
+}
+.correct-option {
+  background-color: #aef7bf;
+
+}

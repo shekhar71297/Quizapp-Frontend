@@ -1,0 +1,2167 @@
+import React, { useState, useEffect } from 'react';
+import {TextField,Button,Grid, Paper,Typography,Radio,RadioGroup,FormControlLabel,FormControl, Select,MenuItem
+} from '@mui/material';
+import { useSelector, useDispatch } from 'react-redux';
+import * as feedbackAction from '../action';
+import * as validation from '../../../utils/constant';
+
+const FeedbackForm = () => {
+  // Get branches from Redux store
+  const allBranch = useSelector(state => state.FeedbackStore.branch);
+  const dispatch = useDispatch();
+
+  // Dispatch actions
+  const addFeedback = (data) => dispatch(feedbackAction.addFeedback(data));
+  const getAllBranch = () => dispatch(feedbackAction.getAllBranch());
+
+  useEffect(() => {
+    // Fetch branches when component mounts
+    getAllBranch();
+  }, []);
+
+  // State to manage form data and errors
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    branch: '',
+    contact: '',
+    question1: '',
+    question2: '',
+    question3: '',
+    question4: '',
+    question5: '',
+    prnNo: '',
+    otherbranch: '',
+    datetime: new Date().toISOString().split('T')[0], // Adjusted datetime format
+    errors: {
+      prnNoError: false
+    }
+  });
+
+  // Handle input change in form fields
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    let updatedFormData = { ...formData, [name]: value };
+
+    // If the selected value is a branch, set branch_id accordingly
+    if (name === 'branch') {
+      if (value !== 'Branch' && value !== 'Cdac' && value !== 'Other') {
+        // Assuming branch_id corresponds to the selected branch
+        const selectedBranch = allBranch.find(branch => branch.branchName === value);
+        if (selectedBranch) {
+          updatedFormData = {
+            ...updatedFormData,
+            branch_id: selectedBranch.id
+          };
+        }
+      } else {
+        // Reset branch_id if 'Cdac' or 'Other' is selected
+        updatedFormData = {
+          ...updatedFormData,
+          branch_id: null
+        };
+      }
+    }
+
+    setFormData(updatedFormData);
+  };
+
+  // Handle form submission
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    // Add branch_id to formData if branch is selected
+    // Dispatch add student action
+    const formDataWithBranchId = {
+      ...formData,
+      branch_id: formData.branch === 'Branch' || formData.branch === 'cdac' || formData.branch === 'otherbranch' ? NaN : formData.branch
+    };
+
+    console.log(formDataWithBranchId);
+
+    addFeedback(formDataWithBranchId);
+
+    // Reset form fields after submission
+    setFormData({
+      name: '',
+      email: '',
+      branch: '',
+      contact: '',
+      question1: '',
+      question2: '',
+      question3: '',
+      question4: '',
+      question5: '',
+      prnNo: '',
+      otherbranch: '',
+      datetime: new Date().toISOString().split('T')[0], // Reset datetime field to current date and time
+      errors: {
+        prnNoError: false
+      }
+    });
+  };
+
+  return (
+    <Grid container justifyContent="center" alignItems="center" style={{ minHeight: '100vh' }}>
+      <Grid item xs={12} sm={8} md={6} lg={4}>
+        <Paper elevation={3} style={{ padding: 20 }}>
+          <Typography variant="h5" gutterBottom align="center">Feedback Form</Typography>
+          <form onSubmit={handleSubmit}>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  variant="outlined"
+                  size="small"
+                  InputProps={{ style: { fontSize: 16 } }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  variant="outlined"
+                  size="small"
+                  InputProps={{ style: { fontSize: 16 } }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Contact"
+                  name="contact"
+                  value={formData.contact}
+                  onChange={handleChange}
+                  variant="outlined"
+                  size="small"
+                  InputProps={{ style: { fontSize: 16 } }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <FormControl fullWidth>
+                  <Typography>Select Organization</Typography>
+                  <RadioGroup
+                    row
+                    aria-label="organization"
+                    name="branch"
+                    value={formData.branch}
+                    onChange={handleChange}
+                  >
+                    <FormControlLabel value="Branch" control={<Radio />} label="Branch" />
+                    <FormControlLabel value="Cdac" control={<Radio />} label="Cdac" />
+                    <FormControlLabel value="Other" control={<Radio />} label="Other" />
+                  </RadioGroup>
+                  {formData.branch === 'Branch' && (
+                    <Select
+                      name='branch'
+                      value={formData.branch}
+                      onChange={handleChange}
+                      aria-label='Choose branch'
+                    >
+                      {allBranch && allBranch.map((val, index) => (
+                        <MenuItem key={val.id} value={val.id}>{val.branchName}</MenuItem>
+                      ))}
+                    </Select>
+                  )}
+
+                  {formData.branch === 'Cdac' &&
+                    <TextField
+                      id="prnNo"
+                      variant="outlined"
+                      color="secondary"
+                      label="PRN No"
+                      name="prnNo"
+                      value={formData.prnNo}
+                      onChange={handleChange}
+                      error={formData.errors.prnNoError}
+                      helperText={formData.errors.prnNoError && validation.errorText("Please enter a valid PRN No") || "eg: Hello-77"}
+                      fullWidth
+                    />
+                  }
+
+                  {formData.branch === 'Other' &&
+                    <TextField
+                      fullWidth
+                      label="Other Branch"
+                      name="otherbranch"
+                      value={formData.otherbranch}
+                      onChange={handleChange}
+                      variant="outlined"
+                      size="small"
+                      InputProps={{ style: { fontSize: 16 } }}
+                    />
+                  }
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Question 1"
+                  name="question1"
+                  value={formData.question1}
+                  onChange={handleChange}
+                  variant="outlined"
+                  size="small"
+                  InputProps={{ style: { fontSize: 16 } }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Question 2"
+                  name="question2"
+                  value={formData.question2}
+                  onChange={handleChange}
+                  variant="outlined"
+                  size="small"
+                  InputProps={{ style: { fontSize: 16 } }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Question 3"
+                  name="question3"
+                  value={formData.question3}
+                  onChange={handleChange}
+                  variant="outlined"
+                  size="small"
+                  InputProps={{ style: { fontSize: 16 } }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Question 4"
+                  name="question4"
+                  value={formData.question4}
+                  onChange={handleChange}
+                  variant="outlined"
+                  size="small"
+                  InputProps={{ style: { fontSize: 16 } }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Question 5"
+                  name="question5"
+                  value={formData.question5}
+                  onChange={handleChange}
+                  variant="outlined"
+                  size="small"
+                  InputProps={{ style: { fontSize: 16 } }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Date and Time"
+                  name="datetime"
+                  value={formData.datetime}
+                  onChange={handleChange}
+                  variant="outlined"
+                  size="small"
+                  InputProps={{ style: { fontSize: 16 } }}
+                  disabled // Make the field disabled to prevent manual editing
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <Button variant="contained" color="primary" type="submit" fullWidth>
+                  Submit
+                </Button>
+              </Grid>
+            </Grid>
+          </form>
+        </Paper>
+      </Grid>
+    </Grid>
+  );
+};
+
+export default FeedbackForm;
+
+
+
+
+
+
+
+
+
+// Function to fetch all branches
+export const getAllBranch = () => dispatch => {
+  try {
+    // Perform HTTP GET request to fetch branches
+    Get(urls.branch).then(response => {
+      // Reverse the order of branches
+      const reversedexam = response.data.reverse();
+      // Dispatch action with the reversed branches
+      dispatch(getBranchSuccess(reversedexam));
+    }).catch(error => {
+      // Dispatch action with error if request fails
+      dispatch(getBranchError(error.response));
+    });
+  } catch (error) {
+    dispatch(getBranchError(error.response));
+  }
+};
+
+// Function to fetch all feedback
+// export const getAllFeedback = () => dispatch => {
+//   try {
+//     // Perform HTTP GET request to fetch feedback
+//     Get(urls.feedback).then(response => {
+//       // Reverse the order of feedback
+//       const reversedFeedback = response.data.reverse();
+//       // Dispatch action with the reversed feedback
+//       dispatch(getFeedbackSuccess(reversedFeedback));
+//     }).catch(error => {
+//       // Dispatch action with error if request fails
+//       dispatch(getFeedbackError(error.response));
+//     });
+//   } catch (error) {
+//     dispatch(getFeedbackError(error.response));
+//   }
+// };
+
+
+// Add new feedback
+export const addFeedback = data =>  dispatch => {
+  try {
+    const response =  Post(urls.feedback, data);
+    dispatch(addFeedbackSuccess(response.data));
+  } catch (error) {
+    dispatch(addFeedbackError(error.response));
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/ // Thunks
+
+// // Function to fetch all branches
+// // export const getAllBranch = () => dispatch => {
+// //   try {
+// //     // Perform HTTP GET request to fetch branches
+// //     Get(urls.branch).then(response => {
+// //       // Reverse the order of branches
+// //       const reversedexam = response.data.reverse();
+// //       // Dispatch action with the reversed branches
+// //       dispatch(getBranchSuccess(reversedexam));
+// //     }).catch(error => {
+// //       // Dispatch action with error if request fails
+// //       dispatch(getBranchError(error.response));
+// //     });
+// //   } catch (error) {
+// //     dispatch(getBranchError(error.response));
+// //   }
+// // };
+
+// // Function to fetch all feedback
+// // export const getAllFeedback = () => dispatch => {
+// //   try {
+// //     // Perform HTTP GET request to fetch feedback
+// //     Get(urls.feedback).then(response => {
+// //       // Reverse the order of feedback
+// //       const reversedFeedback = response.data.reverse();
+// //       // Dispatch action with the reversed feedback
+// //       dispatch(getFeedbackSuccess(reversedFeedback));
+// //     }).catch(error => {
+// //       // Dispatch action with error if request fails
+// //       dispatch(getFeedbackError(error.response));
+// //     });
+// //   } catch (error) {
+// //     dispatch(getFeedbackError(error.response));
+// //   }
+// // };
+
+
+// // Add new feedback
+// // export const addFeedback = data =>  dispatch => {
+// //   try {
+// //     const response =  Post(urls.feedback, data);
+// //     dispatch(addFeedbackSuccess(response.data));
+// //   } catch (error) {
+// //     dispatch(addFeedbackError(error.response));
+// //   }
+// // };
+
+// // // Slice
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+if (name === 'email') {
+      const isEmailError = !validation.isValidEmail(value);
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        errors: {
+          ...prevFormData.errors,
+          emailError: isEmailError
+        }
+      }));
+    }
+
+    if (name === 'contact') {
+      const isContactError = !validation.isValidContact(value);
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        errors: {
+          ...prevFormData.errors,
+          contactError: isContactError
+        }
+      }));
+    }
+
+    if (name === 'question1') {
+      const isQuestionError = !validation.isValidQuestion(value);
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        errors: {
+          ...prevFormData.errors,
+          isquestionError1: isQuestionError
+        }
+      }));
+    }
+    if (name === 'question2') {
+      const isQuestionError = !validation.isValidQuestion(value);
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        errors: {
+          ...prevFormData.errors,
+          isquestionError1: isQuestionError
+        }
+      }));
+    }
+
+
+||
+      formData.errors.emailError ||
+      formData.errors.contactError ||
+      formData.errors.prnNoError ||
+      formData.errors.isquestionError1 ||
+      formData.errors.isquestionError2
+
+
+
+
+
+
+
+       {/* <Typography component="span" variant="subtitle1" sx={{ fontSize: '23px' }}>
+          <span style={{ fontWeight: 'bold' }}> Student Branch:</span>
+          {selectedFeedback.branch.branchName} <br />
+         </Typography> */}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+         
+import React, { useState, useEffect } from 'react';
+import Paper from '@mui/material/Paper';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TablePagination from '@mui/material/TablePagination';
+import TableRow from '@mui/material/TableRow';
+import { TextField, Button, Grid, MenuItem, Radio, Typography, RadioGroup, FormControlLabel, FormControl, FormLabel } from '@mui/material';
+import Box from '@mui/material/Box';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
+import InputAdornment from '@mui/material/InputAdornment';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import SearchIcon from '@mui/icons-material/Search';
+import DialogBox from '../../../component/common/DialogBox';
+import { useSelector, useDispatch } from 'react-redux';
+import * as TablePaginationActions from '../../../component/common/TablePaginationActions'
+import * as validation from '../../../utils/constant';
+import { urls } from '../../../utils/constant';
+import { Put, Get, Delete } from '../../../services/Http.Service';
+import { staffActions } from '../staffSliceReducer';
+import AddIcon from '@mui/icons-material/Add';
+
+
+
+
+const StaffModule = () => {
+ const [page, setPage] = useState(0);
+ const [rowsPerPage, setRowsPerPage] = useState(5);
+ const [searchQuery, setSearchQuery] = useState("");
+ const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+ const [recordToDeleteId, setRecordToDeleteId] = useState(null);
+ const [snackbarOpen, setSnackbarOpen] = useState(false);
+ const [snackbarMessage, setSnackbarMessage] = useState('');
+ const [severity, setSeverity] = useState("success");
+ const [id, setId] = useState(null);
+  const [fname, setFname] = useState("");
+  const [lname, setLname] = useState("");
+  const [role, setRole] = useState("");
+  const [password, setPassword] = useState("");
+  const [contact, setContact] = useState("");
+  const [gender, setGender] = useState("");
+  const [email, setEmail] = useState("");
+  const [dob, setdob] = useState("");
+const [employeeid, setemployeeid] = useState("");
+
+
+ const dispatch = useDispatch();
+ const { allEmployee } = useSelector((store) => store.employee)
+ const { SingleUser } = useSelector((state) => state.user);
+
+ useEffect(() => {
+  Get(`${urls.employee}`)
+   .then(response => {
+    const reversedemployee = response.data.reverse(); // Reverse the array of users
+    dispatch(staffActions.getEmployee(reversedemployee));
+    console.log('inside the user action', reversedemployee);
+   })
+   .catch(error => console.log("staff error: ", error));
+ }, []);
+
+ console.log("allEmployee", allEmployee);
+
+
+ useEffect(() => {
+  if (SingleUser) {
+    const { id, fname, lname, role, password, contact, gender, email, dob , employeeid } = SingleUser;
+    setId(id);
+    setFname(fname);
+    setLname(lname);
+    setRole(role);
+    setRole(dob);
+    setRole(employeeid);
+    setPassword(password);
+    setContact(contact);
+    setGender(gender);
+    setEmail(email);
+  }
+}, [SingleUser]);
+
+ const handleSearchQueryChange = (event) => {
+  setSearchQuery(event.target.value); // Set searchQuery state when the search query changes
+  setPage(0);
+ };
+
+ const handleChangePage = (event, newPage) => {
+  setPage(newPage);
+ };
+
+ const handleChangeRowsPerPage = (event) => {
+  setRowsPerPage(parseInt(event.target.value, 10));
+  setPage(0);
+ };
+
+
+ const confirmDelete = () => {
+  const id = recordToDeleteId;
+
+  Delete(`${urls.employee}${id}`)
+   .then(response => dispatch(staffActions.deleteEmployee(id)))
+   .catch(error => console.log("employee error: ", error));
+
+  closeConfirmDialog();
+  setSnackbarOpen(true);
+  setSnackbarMessage('employee deleted successfully');
+  setSeverity('error');
+ };
+
+ const deletedata = (id) => {
+  openConfirmDialog(id);
+ };
+
+ const openConfirmDialog = (id) => {
+  setConfirmDialogOpen(true);
+  setRecordToDeleteId(id);
+ };
+
+ const closeConfirmDialog = () => {
+  setConfirmDialogOpen(false);
+  setRecordToDeleteId(null);
+ };
+
+ const closeSnackbar = () => {
+  setSnackbarOpen(false);
+  setSnackbarMessage('');
+ };
+
+ let empobj = {
+  email,
+  fname,
+  lname,
+  password,
+  role,
+  dob,
+  employeeid,
+  gender,
+  contact,
+ };
+
+ //--------------------- for add-update onchange method------------------------//
+ const updateuser = (event) => {
+  event.preventDefault();
+
+  let empobj = {
+   email,
+   fname,
+   lname,
+   password,
+   role,
+   dob,
+   employeeid,
+   gender,
+   contact,
+  };
+
+  Post(urls.employee,empobj )
+  .then(response => dispatch(staffActions.addEmployee(response.data)))
+  .catch(error => console.log("employee error: ", error));
+  setSnackbarOpen(true);
+  setSnackbarMessage('employee added successfully.');
+  
+}
+
+  empobj['id'] = id;
+  // initUserRequest();
+  // updateUserRequest(uobj);
+  Put(`${urls.employee}${id}/`, empobj).then(response => dispatch(staffActions.updateEmployee(response.data)))
+   .catch(error => console.log("user error: ", error));
+  setSnackbarOpen(true);
+  setSnackbarMessage('emplyee updated successfully');
+  setSeverity("success");
+
+  handleClose();
+  Get(`${urls.employee}`)
+   .then(response => {
+    const reversedemployee = response.data.reverse(); // Reverse the array of users
+    dispatch(staffActions.getEmployee(reversedemployee));
+    console.log('inside the user action', reversedemployee);
+   })
+   .catch(error => console.log("user error: ", error));
+ };
+
+
+
+
+ const filteredEmployee = allEmployee.filter((data) => {
+  const query = searchQuery.toLowerCase(); // Ensure searchQuery is used after initialization
+  const fnameIncludes = data.fname && data.fname.toLowerCase().includes(query);
+  const lnameIncludes = data.lname && data.lname.toLowerCase().includes(query);
+  const emailIncludes = data.email && data.email.toLowerCase().includes(query);
+  const roleIncludes = data.role && data.role.toLowerCase().includes(query);
+  const genderIncludes = data.gender && data.gender.toLowerCase().includes(query);
+  return fnameIncludes || lnameIncludes || emailIncludes || roleIncludes || genderIncludes;
+ });
+ return (
+  <div>
+   <Box>
+    <Paper>
+     <TableContainer sx={{ marginTop: 5 }}>
+      <Table aria-label="simple table" sx={{}}>
+       <TableHead style={{ overflow: 'auto' }}>
+        <TableRow>
+         <TableCell align="center" colSpan={10} sx={{ color: "white", backgroundColor: "#1976d2", fontSize: "25px", textAlign: "start", fontWeight: "bolder" }}>
+
+          <Grid container alignItems="center" justifyContent="space-between" style={{ position: 'relative', overflow: "auto", top: 0, zIndex: 1, }}>
+           <Grid item>
+            Manage Employee
+           </Grid>
+           <Grid item>
+
+            <TextField
+             className='searchinput'
+             type="text"
+             value={searchQuery}
+             onChange={handleSearchQueryChange}
+             placeholder="Search User"
+             variant="standard"
+             sx={{
+              backgroundColor: 'white',
+              padding: "2px 3px",
+              borderRadius: "4px",
+              width: "auto",
+
+             }}
+             InputProps={{
+              startAdornment: (
+               <InputAdornment position="end">
+                <SearchIcon />
+               </InputAdornment>
+              ),
+             }}
+
+            />
+           </Grid>
+          </Grid>
+         </TableCell>
+        </TableRow>
+        <Button variant="contained" color="primary" size="small" type="button" sx={{ margin: "8px", padding: "4px 4px", }} onClick={() => (handleOpen())}><AddIcon />Employee</Button>
+        <TableRow>
+         <TableCell align="center"><Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>SrNo</Typography></TableCell>
+         <TableCell align="center"><Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>First Name</Typography></TableCell>
+         {<TableCell align="center"><Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>Last Name</Typography></TableCell>}
+         <TableCell align="center"><Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>Email</Typography></TableCell>
+         <TableCell align="center"><Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>DOB</Typography></TableCell>
+         <TableCell align="center"><Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>EmployeeId</Typography></TableCell>
+         <TableCell align="center"><Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>Role</Typography></TableCell>
+         {<TableCell align="center"><Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>Gender</Typography></TableCell>}
+         {<TableCell align="center"><Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>Contact</Typography></TableCell>}
+
+         <TableCell align="center"><Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>Action</Typography></TableCell>
+        </TableRow>
+       </TableHead>
+       <TableBody>
+
+        {filteredEmployee.length === 0 ? (
+         <TableRow>
+          <TableCell colSpan={8} align='center'>
+           <strong style={{ fontSize: "34px" }}>No data found</strong>
+
+          </TableCell>
+         </TableRow>
+        ) : (
+
+
+         filteredEmployee && filteredEmployee.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((data, index) => {
+          const currentIndex = page * rowsPerPage + index + 1;
+
+          return (<TableRow key={index}>
+           <TableCell component="th" align="center" scope="row">{currentIndex}</TableCell>
+           <TableCell className="tablebody" align="center">{data.fname}</TableCell >
+           <TableCell className="tablebody" align="center">{data.lname}</TableCell >
+           <TableCell className="tablebody" align="center">{data.email}</TableCell>
+           <TableCell className="tablebody" align="center">{data.dob}</TableCell>
+           <TableCell className="tablebody" align="center">{data.employeeId}</TableCell>
+           <TableCell className="tablebody" align="center">{data.role}</TableCell>
+           <TableCell className="tablebody" align="center">{data.gender}</TableCell>
+           <TableCell className="tablebody" align="center">{data.contact}</TableCell>
+
+           <TableCell className="tablebody" align="center" >
+            <Button onClick={() => handleopenDetails(data)}><VisibilityIcon /></Button>
+            <Button onClick={() => (handleOpen(data.id))}><EditIcon /></Button>
+            <Button onClick={() => deletedata(data.id)}><DeleteIcon /></Button>
+           </TableCell>
+
+          </TableRow>
+          )
+         }) || [])}
+
+       </TableBody>
+      </Table>
+     </TableContainer>
+     <TablePagination
+      rowsPerPageOptions={[5, 10, 25]}
+      colSpan={8} // Adjust the colSpan value according to your table structure
+      count={filteredEmployee.length}
+      rowsPerPage={rowsPerPage}
+      page={page}
+      SelectProps={{
+       inputProps: {
+        'aria-label': 'rows per page',
+       },
+       native: true,
+      }}
+      onPageChange={handleChangePage}
+      onRowsPerPageChange={handleChangeRowsPerPage}
+      ActionsComponent={TablePaginationActions.default} // Imported component
+     />
+
+    </Paper>
+   </Box>
+
+   <DialogBox
+    open={open}
+    onClose={handleClose}
+    onConfirm={(event) => {
+     handleClose()
+     updateuser(event)
+
+    }}
+
+    message={`Are you sure you want to  update this User?`} title='Update User'
+    content={
+     <form onSubmit={updateuser}>
+      <Grid container spacing={2}>
+       <Grid item xs={12} >
+        <TextField
+         required
+         label="First Name"
+         variant="outlined"
+         fullWidth
+         name="fname"
+         type="text"
+         value={fname}
+         onChange={handleChange}
+         error={fnameError}
+         helperText={fnameError && validation.errorText("Please enter a valid first name") || 'eg:John'}
+        />
+       </Grid>
+       <Grid item xs={12}>
+        <TextField
+         required
+         label="Last Name"
+         variant="outlined"
+         type="text"
+         fullWidth
+         name="lname"
+         value={lname}
+         onChange={handleChange}
+         error={lnameError}
+         helperText={lnameError && validation.errorText("Please enter a valid last name") || 'eg: Dev'}
+        />
+       </Grid>
+       <Grid item xs={12}>
+        <TextField
+         required
+         label="Email"
+         variant="outlined"
+         fullWidth
+         type='email'
+         name="email"
+         value={email}
+         onChange={handleChange}
+         error={emailError}
+         helperText={emailError && validation.errorText("Please enter a valid Email") || 'eg: John1@gmail.com'}
+        />
+       </Grid>
+       <Grid item xs={12}>
+        <TextField
+         required
+         label="contact"
+         variant="outlined"
+         fullWidth
+         type="tel"
+         name="contact"
+         value={contact}
+         onChange={handleChange}
+         error={contactError}
+         helperText={contactError && validation.errorText("Please enter a valid contact") || 'eg: 8888888888'}
+        />
+       </Grid>
+       <Grid item xs={12}>
+        <TextField
+         required
+         label="Role"
+         variant="outlined"
+         fullWidth
+         name="role"
+         value={role}
+         onChange={handleChange}
+        />
+
+        <TextField
+         required
+         label="dob"
+         variant="outlined"
+         fullWidth
+         name="dob"
+         value={dob}
+         onChange={handleChange}
+        />
+        <TextField
+         required
+         label="Role"
+         variant="outlined"
+         fullWidth
+         name="employeeid"
+         value={employeeid}
+         onChange={handleChange}
+        />
+
+       </Grid>
+       <Grid item xs={12}>
+        <FormControl component="fieldset">
+         <FormLabel component="legend" required >Gender</FormLabel>
+         <RadioGroup
+          aria-label="gender"
+          name="gender"
+          value={gender}
+          onChange={handleChange}
+          row
+         >
+          <FormControlLabel value="male" checked={gender === "male"} control={<Radio />} label="Male" />
+          <FormControlLabel value="female" checked={gender === "female"} control={<Radio />} label="Female" />
+          <FormControlLabel value="other" checked={gender === "other"} control={<Radio />} label="Other" />
+         </RadioGroup>
+        </FormControl>
+       </Grid>
+
+      </Grid>
+     </form>
+    }
+    disable={isSubmitDisabled}
+    submitLabel={'Update User'}
+   />
+
+
+   <DialogBox
+    open={confirmDialogOpen}
+    onClose={closeConfirmDialog}
+    onConfirm={() => {
+     closeConfirmDialog();
+     confirmDelete();
+    }}
+    message={`Are you sure you want to delete this record?`}
+    title={`Delete Record`}
+    submitLabel={`Delete`}
+
+   />
+   {/* alert message after action perform */}
+   <Snackbar
+    open={snackbarOpen}
+    autoHideDuration={3000}
+    onClose={closeSnackbar}
+    anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+   >
+    <MuiAlert
+     elevation={6}
+     variant="filled"
+     onClose={closeSnackbar}
+     severity={severity}
+     sx={{ width: '100%' }}
+    >
+     {snackbarMessage}
+    </MuiAlert>
+   </Snackbar>
+
+
+  </div>
+ )
+
+
+export default StaffModule
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<DialogBox
+    open={open}
+    onClose={handleClose}
+    onConfirm={(event) => {
+     handleClose()
+     updateuser(event)
+
+    }}
+
+    message={`Are you sure you want to  update this User?`} title='Update User'
+    content={
+     <form onSubmit={updateuser}>
+      <Grid container spacing={2}>
+       <Grid item xs={12} >
+        <TextField
+         required
+         label="First Name"
+         variant="outlined"
+         fullWidth
+         name="fname"
+         type="text"
+         value={fname}
+         onChange={handleChange}
+         error={fnameError}
+         helperText={fnameError && validation.errorText("Please enter a valid first name") || 'eg:John'}
+        />
+       </Grid>
+       <Grid item xs={12}>
+        <TextField
+         required
+         label="Last Name"
+         variant="outlined"
+         type="text"
+         fullWidth
+         name="lname"
+         value={lname}
+         onChange={handleChange}
+         error={lnameError}
+         helperText={lnameError && validation.errorText("Please enter a valid last name") || 'eg: Dev'}
+        />
+       </Grid>
+       <Grid item xs={12}>
+        <TextField
+         required
+         label="Email"
+         variant="outlined"
+         fullWidth
+         type='email'
+         name="email"
+         value={email}
+         onChange={handleChange}
+         error={emailError}
+         helperText={emailError && validation.errorText("Please enter a valid Email") || 'eg: John1@gmail.com'}
+        />
+       </Grid>
+       <Grid item xs={12}>
+        <TextField
+         required
+         label="contact"
+         variant="outlined"
+         fullWidth
+         type="tel"
+         name="contact"
+         value={contact}
+         onChange={handleChange}
+         error={contactError}
+         helperText={contactError && validation.errorText("Please enter a valid contact") || 'eg: 8888888888'}
+        />
+       </Grid>
+       <Grid item xs={12}>
+        <TextField
+         required
+         label="Role"
+         variant="outlined"
+         fullWidth
+         name="role"
+         value={role}
+         onChange={handleChange}
+        />
+
+        <TextField
+         required
+         label="dob"
+         variant="outlined"
+         fullWidth
+         name="dob"
+         value={dob}
+         onChange={handleChange}
+        />
+        <TextField
+         required
+         label="Role"
+         variant="outlined"
+         fullWidth
+         name="employeeid"
+         value={employeeid}
+         onChange={handleChange}
+        />
+
+       </Grid>
+       <Grid item xs={12}>
+        <FormControl component="fieldset">
+         <FormLabel component="legend" required >Gender</FormLabel>
+         <RadioGroup
+          aria-label="gender"
+          name="gender"
+          value={gender}
+          onChange={handleChange}
+          row
+         >
+          <FormControlLabel value="male" checked={gender === "male"} control={<Radio />} label="Male" />
+          <FormControlLabel value="female" checked={gender === "female"} control={<Radio />} label="Female" />
+          <FormControlLabel value="other" checked={gender === "other"} control={<Radio />} label="Other" />
+         </RadioGroup>
+        </FormControl>
+       </Grid>
+
+      </Grid>
+     </form>
+    }
+    disable={isSubmitDisabled}
+    submitLabel={'Update User'}
+   />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   // const handleOpen = (id = null) => {
+ //  console.log("id" ,id);
+ //  if (id !== null) {
+ //   Get(`${urls.employee}`)
+ //    .then(response => {
+ //     const reversedemployee = response.data.reverse(); // Reverse the array of users
+ //     dispatch(staffActions.singleEmployee(reversedemployee));
+ //     console.log('inside the user action', reversedemployee);
+ //    })
+ //    .catch(error => console.log("staff error: ", error));
+ //   setOpen(true);
+ //   setisAddaEmp(false);
+ //  } else {
+ //   setOpen(true);
+ //   setisAddaEmp(true);
+ //   resetUserFormHandler();
+ //  }
+ // };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ import React, { useState, useEffect } from 'react';
+// other imports...
+
+const EmployeeModule = () => {
+    // existing state hooks...
+
+    const handleOpen = (id = null) => {
+        if (id !== null) {
+            const employee = allEmployee.find(emp => emp.id === id);
+            if (employee) {
+                const { id, fname, lname, role, dob, employeeId, contact, gender, email } = employee;
+                setId(id);
+                setFname(fname);
+                setLname(lname);
+                setRole(role);
+                setdob(dob);
+                setemployeeId(employeeId);
+                setContact(contact);
+                setGender(gender);
+                setEmail(email);
+                setOpen(true);
+                setisAddaEmp(false);
+            }
+        } else {
+            setOpen(true);
+            setisAddaEmp(true);
+            resetUserFormHandler();
+        }
+    };
+
+    const updateEmp = (event) => {
+        event.preventDefault();
+
+        if (errors.fnameError || errors.lnameError || errors.emailError || errors.contactError || errors.passwordError) {
+            setSnackbarOpen(true);
+            setSnackbarMessage("please fix validation error before submitting");
+            setSeverity("error");
+            return;
+        }
+        let uobj = {
+            email: email,
+            fname: fname,
+            lname: lname,
+            role: role,
+            dob: dob,
+            employeeId: employeeId,
+            gender: gender,
+            contact: contact,
+        };
+        if (isAddaEmp) {
+            Post(urls.employee, uobj)
+                .then(response => {
+                    dispatch(staffActions.addEmployee(response.data));
+                    setUser(prevState => [...prevState, response.data]); // Add the new employee to the local state
+                    setSnackbarOpen(true);
+                    setSnackbarMessage('Employee added successfully.');
+                    setSeverity("success");
+                })
+                .catch(error => console.log("employee error: ", error));
+        } else {
+            uobj['id'] = id;
+            Put(`${urls.employee}${uobj.id}/`, uobj)
+                .then(response => {
+                    dispatch(staffActions.updateEmployee(response.data));
+                    setUser(prevState => prevState.map(emp => emp.id === response.data.id ? response.data : emp)); // Update the existing employee in the local state
+                    setSnackbarOpen(true);
+                    setSnackbarMessage('Employee updated successfully.');
+                    setSeverity("success");
+                })
+                .catch(error => console.log("employee error: ", error));
+        }
+
+        handleClose();
+        setOpen(false);
+    };
+
+    // remaining code...
+};
+
+export default EmployeeModule;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import React, { useState, useEffect } from 'react';
+import Paper from '@mui/material/Paper';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TablePagination from '@mui/material/TablePagination';
+import TableRow from '@mui/material/TableRow';
+import { TextField, Button, Grid, MenuItem, Radio, Typography, RadioGroup, FormControlLabel, FormControl, FormLabel } from '@mui/material';
+import Box from '@mui/material/Box';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import AddIcon from '@mui/icons-material/Add';
+import Dialog from '@mui/material/Dialog';
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
+import InputAdornment from '@mui/material/InputAdornment';
+import IconButton from '@mui/material/IconButton';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import SearchIcon from '@mui/icons-material/Search';
+import * as validation from '../../../utils/constant';
+import DialogBox from '../../../component/common/DialogBox';
+import { useSelector, useDispatch } from 'react-redux';
+import * as TablePaginationActions from '../../../component/common/TablePaginationActions'
+import { urls } from '../../../utils/constant';
+import { Put, Get, Delete, Post } from '../../../services/Http.Service';
+import { staffActions } from '../staffSliceReducer';
+
+
+
+const EmployeeModule = () => {
+ const [Employee, setEmployee] = useState([]);
+ const [id, setId] = useState(null);
+ const [fname, setFname] = useState("");
+ const [lname, setLname] = useState("");
+ const [role, setRole] = useState("");
+ const [dob, setdob] = useState("");
+ const [employeeId, setemployeeId] = useState("");
+ const [contact, setContact] = useState("");
+ const [gender, setGender] = useState("");
+ const [email, setEmail] = useState("");
+ const [page, setPage] = useState(0);
+ const [rowsPerPage, setRowsPerPage] = useState(5);
+ const [open, setOpen] = useState(false);
+ const [searchQuery, setSearchQuery] = useState("");
+ const [isAddaEmp, setisAddaEmp] = useState(true);
+ const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+ const [recordToDeleteId, setRecordToDeleteId] = useState(null);
+ const [snackbarOpen, setSnackbarOpen] = useState(false);
+ const [snackbarMessage, setSnackbarMessage] = useState('');
+ const [errors, setErrors] = useState({
+  fnameError: false,
+  lnameError: false,
+  contactError: false,
+  emailError: false,
+
+ });
+ const [showPassword, setShowPassword] = useState(false);
+ const [severity, setSeverity] = useState("success");
+ const [selectedEmployeedetail, setSelectedEmployeedetail] = useState("");
+ const [isDetailsPopup, setIsDetailsPopup] = useState(false);
+
+
+ const dispatch = useDispatch();
+ const { allEmployee } = useSelector((store) => store.employee)
+ const { emp } = useSelector((state) => state.employee);
+
+
+ useEffect(() => {
+  Get(`${urls.employee}`)
+   .then(response => {
+    const reversedemployee = response.data.reverse(); // Reverse the array of Employees
+    dispatch(staffActions.getEmployee(reversedemployee));
+    console.log('inside the Employee action', reversedemployee);
+   })
+   .catch(error => console.log("staff error: ", error));
+ }, []);
+
+
+ useEffect(() => {
+  if (emp) {
+   const { id, fname, lname, role, dob, employeeId, contact, gender, email } = emp;
+   setId(id);
+   setFname(fname);
+   setLname(lname);
+   setRole(role);
+   setdob(dob)
+   setemployeeId(employeeId)
+   setContact(contact);
+   setGender(gender);
+   setEmail(email);
+   
+   
+  }
+ }, [emp]);
+
+ const handleSearchQueryChange = (event) => {
+  setSearchQuery(event.target.value);
+  setPage(0);
+ };
+
+ const handleChangePage = (event, newPage) => {
+  setPage(newPage);
+ };
+
+ const handleChangeRowsPerPage = (event) => {
+  setRowsPerPage(parseInt(event.target.value, 10));
+  setPage(0);
+ };
+
+ const handleChange = (event) => {
+  const { name, value } = event.target;
+  switch (name) {
+   case "fname":
+    const isFnameError = !(validation.isValidName(value));
+    setErrors(prevErrors => ({ ...prevErrors, fnameError: isFnameError }));
+    break;
+   case "lname":
+    const isLnameError = !(validation.isValidName(value));
+    setErrors(prevErrors => ({ ...prevErrors, lnameError: isLnameError }));
+    break;
+   case "contact":
+    const isContactError = !(validation.isValidContact(value));
+    setErrors(prevErrors => ({ ...prevErrors, contactError: isContactError }));
+    break;
+   case "email":
+    const isEmailError = !(validation.isValidEmail(value));
+    setErrors(prevErrors => ({ ...prevErrors, emailError: isEmailError }));
+    break;
+   case "password":
+    const isPasswordError = !(validation.isValidPassword(value));
+    setErrors(prevErrors => ({ ...prevErrors, passwordError: isPasswordError }));
+    break;
+   default:
+    break;
+  }
+  switch (name) {
+   case "fname":
+    setFname(value);
+    break;
+   case "lname":
+    setLname(value);
+    break;
+   case "role":
+    setRole(value);
+    break;
+   case "dob":
+    setdob(value);
+    break;
+   case "employeeId":
+    setemployeeId(value);
+    break;
+   case "contact":
+    setContact(value);
+    break;
+   case "gender":
+    setGender(value);
+    break;
+   case "email":
+    setEmail(value);
+    break;
+   default:
+    break;
+  }
+ };
+
+ const handleopenDetails = (record) => {
+  setIsDetailsPopup(true);
+  setSelectedEmployeedetail(record);
+ };
+
+ const handlecloseDetails = () => {
+  setIsDetailsPopup(false);
+  setSelectedEmployeedetail("");
+ };
+
+
+
+ const handleOpen = (id = null) => {
+  if (id !== null) {
+      // Find the employee with the given id from allEmployee array
+      const employee = allEmployee.find(emp => emp.id === id);
+      if (employee) {
+          const { id, fname, lname, role, dob, employeeId, contact, gender, email } = employee;
+          setId(id);
+          setFname(fname);
+          setLname(lname);
+          setRole(role);
+          setdob(dob);
+          setemployeeId(employeeId);
+          setContact(contact);
+          setGender(gender);
+          setEmail(email);
+          setOpen(true);
+          setisAddaEmp(false);
+      }
+  } else {
+      setOpen(true);
+      setisAddaEmp(true);
+      resetEmployeeFormHandler();
+  }
+};
+
+
+
+ const handleClose = () => {
+  setOpen(false);
+ };
+
+ const confirmDelete = () => {
+
+  const id = recordToDeleteId;
+
+  Delete(`${urls.employee}${id}`)
+   .then(response => dispatch(staffActions.deleteEmployee(id)))
+   .catch(error => console.log("employee error: ", error));
+
+  closeConfirmDialog();
+  setSnackbarOpen(true);
+  setSnackbarMessage('Employee deleted successfully');
+  setSeverity('error');
+ };
+
+ const deletedata = (id) => {
+  openConfirmDialog(id);
+ };
+
+ const openConfirmDialog = (id) => {
+  setConfirmDialogOpen(true);
+  setRecordToDeleteId(id);
+ };
+
+ const closeConfirmDialog = () => {
+  setConfirmDialogOpen(false);
+  setRecordToDeleteId(null);
+ };
+
+
+
+ const resetEmployeeFormHandler = () => {
+  setId(null);
+  setFname("");
+  setLname("");
+  setRole("");
+  setContact("");
+  setGender("");
+  setEmail("");
+ };
+
+ const updateEmp = (event) => {
+  event.preventDefault();
+
+  if (errors.fnameError || errors.lnameError || errors.emailError || errors.contactError || errors.passwordError) {
+   setSnackbarOpen(true);
+   setSnackbarMessage("please fix validiation error before submiting");
+   setSeverity("error");
+   return;
+  }
+  let uobj = {
+   email: email,
+   fname: fname,
+   lname: lname,
+   role: role,
+   dob: dob,
+   employeeId: employeeId,
+   gender: gender,
+   contact: contact,
+  };
+  if (isAddaEmp) {
+   // addEmployeeRequest(uobj);
+   Post(urls.employee, uobj)
+    .then(response => dispatch(staffActions.addEmployee(response.data)))
+    .catch(error => console.log("employee error: ", error));
+   setSnackbarOpen(true);
+   setSnackbarMessage('employee added successfully.');
+
+   setSnackbarOpen(true);
+   setSnackbarMessage('Employee added successfully');
+   setSeverity("success");
+
+  } else {
+   uobj['id'] = id;
+   Put(`${urls.employee}${uobj.id}/`, uobj)
+    .then(response => dispatch(staffActions.updateEmployee(response.data)))
+    .catch(error => console.log("employee error: ", error));
+    
+   setSnackbarOpen(true);
+   setSnackbarMessage('employee updated successfully.');
+
+   setSnackbarOpen(true);
+   setSnackbarMessage('Employee updated successfully');
+   setSeverity("success");
+  }
+
+  handleClose();
+  setOpen(false);
+ };
+
+ const closeSnackbar = () => {
+  setSnackbarOpen(false);
+  setSnackbarMessage('');
+ };
+
+ const filterEmp = allEmployee && allEmployee.filter((data) => {
+  // const searchQuery = searchQuery;
+  const query = searchQuery.toLowerCase();
+  const fnameIncludes = data.fname && data.fname.toLowerCase().includes(query);
+  const lnameIncludes = data.lname && data.lname.toLowerCase().includes(query);
+  const emailIncludes = data.email && data.email.toLowerCase().includes(query);
+  const roleIncludes = data.role && data.role.toLowerCase().includes(query);
+  const genderIncludes = data.gender && data.gender.toLowerCase().includes(query);
+
+  return fnameIncludes || lnameIncludes || emailIncludes || roleIncludes || genderIncludes;
+ });
+
+ const isSubmitDisabled = !fname || !lname || !email || !contact || !role || !gender || errors.fnameError || errors.lnameError || errors.emailError || errors.contactError || errors.passwordError;
+
+ return (
+  <div className='container' style={{ marginRight: '25px', marginLeft: "-25px" }}>
+   {/* Employee table  */}
+   <Box>
+    <Paper>
+     <TableContainer sx={{ marginTop: 5 }}>
+      <Table aria-label="simple table" sx={{}}>
+       <TableHead style={{ overflow: 'auto' }}>
+        <TableRow>
+         <TableCell align="center" colSpan={10} sx={{ color: "white", backgroundColor: "#1976d2", fontSize: "25px", textAlign: "start", fontWeight: "bolder" }}>
+          <Grid container alignItems="center" justifyContent="space-between" style={{ position: 'relative', overflow: "auto", top: 0, zIndex: 1, }}>
+           <Grid item>
+            Manage Employee
+           </Grid>
+           <Grid item>
+            <TextField
+             className='searchinput'
+             type="text"
+             value={searchQuery}
+             onChange={handleSearchQueryChange}
+             placeholder="Search Employee"
+             variant="standard"
+             sx={{
+              backgroundColor: 'white',
+              padding: "2px 3px",
+              borderRadius: "4px",
+              width: "auto",
+             }}
+             InputProps={{
+              startAdornment: (
+               <InputAdornment position="end">
+                <SearchIcon />
+               </InputAdornment>
+              ),
+             }}
+            />
+           </Grid>
+          </Grid>
+         </TableCell>
+        </TableRow>
+        <TableRow>
+         <Button variant="contained" color="primary" size="small" type="button" sx={{ margin: "8px", padding: "4px 4px", }} onClick={() => (handleOpen())}><AddIcon />AddEmp</Button>
+        </TableRow>
+        <TableRow>
+         <TableCell align="center"><Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>SrNo</Typography></TableCell>
+         <TableCell align="center"><Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}> Name</Typography></TableCell>
+         {<TableCell align="center"><Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>Last Name</Typography></TableCell>}
+         <TableCell align="center"><Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>Email</Typography></TableCell>
+         <TableCell align="center"><Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>DOB</Typography></TableCell>
+         <TableCell align="center"><Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>employeeId</Typography></TableCell>
+         <TableCell align="center"><Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>Role</Typography></TableCell>
+         {<TableCell align="center"><Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>Gender</Typography></TableCell>}
+         {<TableCell align="center"><Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>Contact</Typography></TableCell>}
+         <TableCell align="center"><Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>Action</Typography></TableCell>
+        </TableRow>
+       </TableHead>
+       <TableBody>
+        {filterEmp.length === 0 ? (
+         <TableRow>
+          <TableCell colSpan={8} align='center'>
+           <strong style={{ fontSize: "34px" }}>No data found</strong>
+          </TableCell>
+         </TableRow>
+        ) : (
+         filterEmp && filterEmp.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((data, index) => {
+          const currentIndex = page * rowsPerPage + index + 1;
+          return (
+           <TableRow key={index}>
+            <TableCell component="th" align="center" scope="row">{currentIndex}</TableCell>
+            <TableCell className="tablebody" align="center">{data.fname}</TableCell >
+            <TableCell className="tablebody" align="center">{data.lname}</TableCell >
+            <TableCell className="tablebody" align="center">{data.email}</TableCell>
+            <TableCell className="tablebody" align="center">{data.dob}</TableCell>
+            <TableCell className="tablebody" align="center">{data.employeeId}</TableCell>
+            <TableCell className="tablebody" align="center">{data.role}</TableCell>
+            <TableCell className="tablebody" align="center">{data.gender}</TableCell>
+            <TableCell className="tablebody" align="center">{data.contact}</TableCell>
+            <TableCell className="tablebody" align="center" >
+             {/* <Button onClick={() => handleopenDetails(data)}><VisibilityIcon /></Button> */}
+             <Button onClick={() => (handleOpen(data.id))}><EditIcon /></Button>
+             <Button onClick={() => deletedata(data.id)}><DeleteIcon /></Button>
+            </TableCell>
+           </TableRow>
+          )
+         }) || []
+        )}
+       </TableBody>
+      </Table>
+     </TableContainer>
+     <TablePagination
+      rowsPerPageOptions={[5, 10, 25]}
+      colSpan={8} // Adjust the colSpan value according to your table structure
+      count={filterEmp.length}
+      rowsPerPage={rowsPerPage}
+      page={page}
+      SelectProps={{
+       inputProps: {
+        'aria-label': 'rows per page',
+       },
+       native: true,
+      }}
+      onPageChange={handleChangePage}
+      onRowsPerPageChange={handleChangeRowsPerPage}
+      ActionsComponent={TablePaginationActions.default} // Imported component
+     />
+    </Paper>
+   </Box>
+
+   {/* popup update and add  */}
+   <DialogBox
+    open={open}
+    onClose={handleClose}
+    onConfirm={(event) => {
+     handleClose()
+     updateEmp(event)
+    }}
+    message={`Are you sure you want to ${isAddaEmp ? 'add' : 'update'} this Employee?`}
+    title={isAddaEmp ? 'Add Emp' : 'Update Employee'}
+    content={
+     <form onSubmit={updateEmp}>
+      <Grid container spacing={2} sx={{ marginTop: 3 }}>
+       <Grid item xs={12} >
+        <TextField
+         required
+         label="First Name"
+         variant="outlined"
+         fullWidth
+         name="fname"
+         type="text"
+         value={fname}
+         onChange={handleChange}
+         error={errors.fnameError}
+         helperText={errors.fnameError && validation.errorText("Please enter a valid first name") || 'eg:John'}
+        />
+       </Grid>
+       <Grid item xs={12}>
+        <TextField
+         required
+         label="Last Name"
+         variant="outlined"
+         type="text"
+         fullWidth
+         name="lname"
+         value={lname}
+         onChange={handleChange}
+         error={errors.lnameError}
+         helperText={errors.lnameError && validation.errorText("Please enter a valid last name") || 'eg: Dev'}
+        />
+       </Grid>
+       <Grid item xs={12}>
+        <TextField
+         required
+         label="Email"
+         variant="outlined"
+         fullWidth
+         type='email'
+         name="email"
+         value={email}
+         onChange={handleChange}
+         error={errors.emailError}
+         helperText={errors.emailError && validation.errorText("Please enter a valid Email") || 'eg: John1@gmail.com'}
+        />
+       </Grid>
+
+       <Grid item xs={12}>
+        <TextField
+         required
+         label="contact"
+         variant="outlined"
+         fullWidth
+         type="tel"
+         name="contact"
+         value={contact}
+         onChange={handleChange}
+         error={errors.contactError}
+         helperText={errors.contactError && validation.errorText("Please enter a valid contact") || 'eg: 8888888888'}
+        />
+       </Grid>
+       <Grid item xs={12}>
+        <TextField
+         select
+         margin="normal"
+         required
+         fullWidth
+         label="Role"
+         name="role"
+         id="role"
+         value={role}
+         onChange={handleChange}
+        >
+
+
+         <MenuItem value="admin">Admin</MenuItem>
+         <MenuItem value="trainer">Trainer</MenuItem>
+         <MenuItem value="counsellor">Counsellor</MenuItem>
+        </TextField>
+       </Grid>
+       <Grid item xs={12}>
+
+        <TextField
+         required
+
+         variant="outlined"
+         fullWidth
+         name="dob"
+         type='date'
+         value={dob}
+         onChange={handleChange}
+        />
+       </Grid>
+       <Grid item xs={12}>
+        <TextField
+         required
+         label="employeeId"
+         variant="outlined"
+         fullWidth
+         name="employeeId"
+         value={employeeId}
+         onChange={handleChange}
+        />
+       </Grid>
+
+
+       <Grid item xs={12}>
+        <FormControl component="fieldset">
+         <FormLabel component="legend" required >Gender</FormLabel>
+         <RadioGroup
+          aria-label="gender"
+          name="gender"
+          value={gender}
+          onChange={handleChange}
+          row
+         >
+          <FormControlLabel value="male" checked={gender === "male"} control={<Radio />} label="Male" />
+          <FormControlLabel value="female" checked={gender === "female"} control={<Radio />} label="Female" />
+          <FormControlLabel value="other" checked={gender === "other"} control={<Radio />} label="Other" />
+         </RadioGroup>
+        </FormControl>
+       </Grid>
+
+      </Grid>
+     </form>
+    }
+    disable={isSubmitDisabled}
+    submitLabel={isAddaEmp ? 'Add Emp' : 'Update Employee'}
+   />
+   {/* Delete pop up model  */}
+   <DialogBox
+    open={confirmDialogOpen}
+    onClose={closeConfirmDialog}
+    onConfirm={() => {
+     closeConfirmDialog();
+     confirmDelete();
+    }}
+    message={`Are you sure you want to delete this record?`}
+    title={`Delete Record`}
+    submitLabel={`Delete`}
+   />
+   {/* alert message after action perform */}
+   <Snackbar
+    open={snackbarOpen}
+    autoHideDuration={3000}
+    onClose={closeSnackbar}
+    anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+   >
+    <MuiAlert
+     elevation={6}
+     variant="filled"
+     onClose={closeSnackbar}
+     severity={severity}
+     sx={{ width: '100%' }}
+    >
+     {snackbarMessage}
+    </MuiAlert>
+   </Snackbar>
+
+  </div >
+ );
+};
+
+export default EmployeeModule;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import React, { useState, useEffect } from 'react';
+import Button from '@mui/material/Button';
+import CssBaseline from '@mui/material/CssBaseline';
+import TextField from '@mui/material/TextField';
+import Box from '@mui/material/Box';
+import Container from '@mui/material/Container';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
+import { Get } from '../../../services/Http.Service'; // Import only Get method
+import { userActions } from '../../user/userSliceReducer';
+import { useSelector, useDispatch } from 'react-redux';
+import { urls } from '../../../utils/constant';
+
+const ForgetPassword = () => {
+    const defaultTheme = createTheme();
+    const [isSnackbarOpen, setIsSnackbarOpen] = useState(false);
+    const [snackbarSeverity, setSnackbarSeverity] = useState('');
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [email, setEmail] = useState('');
+    const [foundUser, setFoundUser] = useState(null); // State to store found user
+
+    const dispatch = useDispatch();
+    const { allUser } = useSelector((store) => store.user);
+
+    useEffect(() => {
+        Get(`${urls.user}`)
+            .then(response => {
+                const reversedUsers = response.data.reverse();
+                dispatch(userActions.getUser(reversedUsers));
+            })
+            .catch(error => console.log("user error: ", error));
+    }, []);
+
+    const inputChangeHandler = (event) => {
+        setEmail(event.target.value);
+    };
+
+    const submitBtnHandler = () => {
+        const user = allUser.find(user => user.email === email); 
+        if (user) {
+            setFoundUser(user);
+            setSnackbarSeverity('success');
+            setSnackbarMessage('user found successfully!');
+        } else {
+            setSnackbarSeverity('error');
+            setSnackbarMessage('User not found!');
+        }
+        setIsSnackbarOpen(true);
+    };
+
+    return (
+        <>
+            <ThemeProvider theme={defaultTheme}>
+                <Container component="main" maxWidth="xs">
+                    <CssBaseline />
+                    <Box
+                        sx={{
+                            marginTop: 10,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            boxShadow: '0px 0px 7px black',
+                            borderRadius: "10px",
+                            border: 'none',
+                            padding: "50px"
+                        }}
+                    >
+                        <Box component="form" noValidate sx={{ mt: 1 }}>
+                            <TextField
+                                margin="normal"
+                                required
+                                fullWidth
+                                id="code"
+                                label="Enter User name or Email id"
+                                name="email"
+                                autoFocus
+                                value={email}
+                                onChange={inputChangeHandler}
+                            />
+                            <Button
+                                type="button"
+                                fullWidth
+                                variant="contained"
+                                sx={{ mt: 3, mb: 2 }}
+                                onClick={submitBtnHandler} 
+                            >
+                                Forget Password
+                            </Button>
+                        </Box>
+                    </Box>
+                </Container>
+            </ThemeProvider>
+            {/* Snackbar */}
+            <Snackbar
+                open={isSnackbarOpen}
+                autoHideDuration={3000}
+                onClose={() => setIsSnackbarOpen(false)}
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            >
+                <Alert onClose={() => setIsSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: '100%' }}>
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
+        </>
+    )
+}
+
+export default ForgetPassword;

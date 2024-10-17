@@ -1,0 +1,23 @@
+.child-components{
+    margin:50px 0px 50px 60px;
+    width: 100%;
+}
+.selected {
+    background-color: #eef1f25a; 
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    padding-right: 5px;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5); 
+  }
+
+  .menu-color{
+    color: #2c387e;
+  }
+
+  .css-1d6w9lk-MuiButtonBase-root-MuiIconButton-root {
+    margin-left: -7px !important;
+  }
+  .css-12i7wg6-MuiPaper-root-MuiDrawer-paper {
+    padding-right: 5px !important;
+    border-right: 9px solid rgb(3 3 3 / 3%) !important;
+  }
