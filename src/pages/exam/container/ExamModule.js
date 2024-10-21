@@ -372,8 +372,8 @@ function ExamModule() {
     return nameInludes || examIdIncludes;
   });
 
-  const isSubmitDisabled = !selectedExam.examName || errors.examNameError||errors.examTimeError || errors.totalQuestionError
-  ||!selectedExam.examTime || !selectedExam.totalQuestion;
+  const isSubmitDisabled = !selectedExam.examName || errors.examNameError || errors.examTimeError || errors.totalQuestionError
+    || !selectedExam.examTime || !selectedExam.totalQuestion;
 
 
   return (
@@ -515,7 +515,7 @@ function ExamModule() {
                     value={selectedExam.examName}
                     onChange={handleExamChange}
                     size='small'
-                    inputProps={{maxLength:30}}
+                    inputProps={{ maxLength: 30 }}
                     onBlur={handleBlur}
                     error={errors.examNameError}
                     helperText={(errors.examNameError && validation.errorText("Invalid Exam Name"))}
@@ -533,7 +533,7 @@ function ExamModule() {
                     size='small'
                     placeholder='enter a time (1min)'
                     onBlur={handleBlur}
-                    inputProps={{maxLength:6}}
+                    inputProps={{ maxLength: 6 }}
                     error={errors.examTimeError}
                     helperText={(errors.examTimeError && validation.errorText("Invalid Exam Time.E.g-1min"))}
                   />
@@ -547,7 +547,7 @@ function ExamModule() {
                     name="totalQuestion"
                     value={selectedExam.totalQuestion}
                     onChange={handleExamChange}
-                    inputProps={{maxLength:3}}
+                    inputProps={{ maxLength: 3 }}
                     size='small'
                     placeholder='enter a count of questions'
                     onBlur={handleBlur}

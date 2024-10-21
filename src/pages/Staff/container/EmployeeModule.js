@@ -241,7 +241,7 @@ const EmployeeModule = () => {
 
     closeConfirmDialog();
     setSnackbarOpen(true);
-    setSnackbarMessage('Employee deleted successfully');
+    setSnackbarMessage('Employee Deleted!.');
     setSeverity('error');
   };
   // Delete data handler
@@ -295,9 +295,9 @@ const EmployeeModule = () => {
     }
 
     let empObj = {
-      email: email,
-      fname: fname,
-      lname: lname,
+      email: email.toLowerCase(),
+      fname: fname.toLowerCase(),
+      lname: lname.toLowerCase(),
       role: role,
       dob: dob,
       employeeId: employeeId,
@@ -315,7 +315,7 @@ const EmployeeModule = () => {
         })
         .catch(error => console.log("employee error: ", error));
       setSnackbarOpen(true);
-      setSnackbarMessage('employee added successfully.');
+      setSnackbarMessage('employee Added!.');
       setSeverity("success");
 
     } else {
@@ -325,7 +325,7 @@ const EmployeeModule = () => {
         .then(response => dispatch(staffActions.updateEmployee(response.data)))
         .catch(error => console.log("employee error: ", error));
       setSnackbarOpen(true);
-      setSnackbarMessage('employee updated successfully.');
+      setSnackbarMessage('employee Updated!.');
       setSeverity("success");
     }
 
@@ -353,7 +353,7 @@ const EmployeeModule = () => {
     return fnameIncludes || lnameIncludes || emailIncludes || roleIncludes || dateIncludes || genderIncludes || contactIncludes || employeeIdIncludes;
   });
   // Determine if submit button should be disabled
-  const isSubmitDisabled = !fname || !lname || !email || !dob || !contact || !role || !gender || errors.fnameError || errors.lnameError || errors.emailError || errors.contactError || errors.passwordError;
+  const isSubmitDisabled = !fname || !lname || !email || !dob || !contact || !role || !gender || !employeeId||errors.fnameError || errors.lnameError || errors.emailError || errors.contactError || errors.passwordError || errors.employeeIdError;
 
   return (
     <>
@@ -488,10 +488,11 @@ const EmployeeModule = () => {
                     size='small'
                     type="text"
                     value={fname}
+                    inputProps={{maxLength:20}}
                     onChange={handleChange}
                     onBlur={handleBlur}
                     error={errors.fnameError}
-                    helperText={errors.fnameError && validation.errorText("Please enter a valid first name") || 'eg:John'}
+                    helperText={errors.fnameError && validation.errorText("Invalid First Name")}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -503,11 +504,12 @@ const EmployeeModule = () => {
                     fullWidth
                     name="lname"
                     size='small'
+                    inputProps={{maxLength:20}}
                     value={lname}
                     onChange={handleChange}
                     onBlur={handleBlur}
                     error={errors.lnameError}
-                    helperText={errors.lnameError && validation.errorText("Please enter a valid last name") || 'eg: Dev'}
+                    helperText={errors.lnameError && validation.errorText("Invalid Last Name") }
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -520,10 +522,11 @@ const EmployeeModule = () => {
                     name="email"
                     size='small'
                     value={email}
+                    inputProps={{maxLength:40}}
                     onChange={handleChange}
                     onBlur={handleBlur}
                     error={errors.emailError}
-                    helperText={errors.emailError && validation.errorText("Please enter a valid Email") || 'eg: John1@gmail.com'}
+                    helperText={errors.emailError && validation.errorText("Invalid Email")}
                   />
                 </Grid>
 
@@ -537,10 +540,11 @@ const EmployeeModule = () => {
                     name="contact"
                     value={contact}
                     size='small'
+                    inputProps={{maxLength:10}}
                     onChange={handleChange}
                     onBlur={handleBlur}
                     error={errors.contactError}
-                    helperText={errors.contactError && validation.errorText("Please enter a valid contact") || 'eg: 8888888888'}
+                    helperText={errors.contactError && validation.errorText("Invalid Contact") }
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -583,7 +587,10 @@ const EmployeeModule = () => {
                     fullWidth
                     name="employeeId"
                     value={employeeId}
+                    inputProps={{maxLength:3}}
                     onChange={handleChange}
+                    helperText={(errors.employeeIdError && validation.errorText('Invalid Employee Id'))}
+                    error={errors.employeeIdError}
                   />
                 </Grid>
                 <Grid item xs={12}>

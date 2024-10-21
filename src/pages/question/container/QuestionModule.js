@@ -519,12 +519,12 @@ const QuestionModule = () => {
                       value={selectedExam}
                       onChange={handleExamChange}
                       autoWidth
-                      style={{ backgroundColor: 'white', width: isSmallScreen ? '130px' : '150px', height: isSmallScreen ? '30px' : "40px" }}
+                      style={{ backgroundColor: 'white', width: isSmallScreen ? '130px' : '200px', height: isSmallScreen ? '30px' : "40px" }}
                       label="Select Exam"
                     >
-                      {/* <MenuItem sx={{ width: isSmallScreen ? '130px' : '150px', height: isSmallScreen ? '30px' : "40px", justifyContent: 'center' }} >None</MenuItem> */}
+                      <MenuItem  aria-readonly sx={{ width: isSmallScreen ? '130px' : '200px', height: isSmallScreen ? '30px' : "40px", justifyContent: 'center' }} >None</MenuItem>
                       {allExam.map((exam) => (
-                        <MenuItem key={exam.id} value={exam.id} sx={{ width: isSmallScreen ? '130px' : '150px', height: isSmallScreen ? '30px' : "40px", justifyContent: 'center' }}  >
+                        <MenuItem key={exam.id} value={exam.id} sx={{ width: isSmallScreen ? '130px' : '200px', height: isSmallScreen ? '30px' : "40px", justifyContent: 'center' }}  >
                           {capitalizeFirstLetter(exam.examName)}
                         </MenuItem>
                       ))}

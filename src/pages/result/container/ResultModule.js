@@ -290,6 +290,9 @@ const ResultModule = () => {
               style={{ backgroundColor: 'white', width: isSmallScreen ? '130px' : '150px', height: isSmallScreen ? '30px' : "40px" }}
               label="Select Batch"
             >
+              <MenuItem aria-readonly>
+                None
+              </MenuItem>
               {allBatch?.map((data) => (
                 <MenuItem key={data.id} value={data.id}>
                   {capitalizeFirstLetter(data.batchname)}
@@ -308,7 +311,9 @@ const ResultModule = () => {
               style={{ backgroundColor: 'white', width: isSmallScreen ? '130px' : '150px', height: isSmallScreen ? '30px' : "40px" }}
               label="Select Exam"
             >
-
+              <MenuItem aria-readonly>
+                None
+              </MenuItem>
               {allExam && allExam.length > 0 && allExam.map((exam) => (
                 <MenuItem key={exam.id} value={exam?.examName}>
                   {capitalizeFirstLetter(exam?.examName)}
@@ -346,9 +351,9 @@ const ResultModule = () => {
                   variant="contained"
                   color="primary"
                   onClick={handlePieClick}
-                  style={{ float:'right'}}
+                  style={{ float: 'right' }}
                 >
-                  Show Total Students 
+                  Show Total Students
                 </Button>
                 <TableContainer component={Paper} sx={{ borderTopLeftRadius: '0px', borderTopRightRadius: '0px' }}>
                   <Table aria-label="simple table">

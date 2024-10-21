@@ -120,7 +120,7 @@ const ForgetPassword = () => {
 
 
   const submitBtnHandler = () => {
-    const user = allUser.find(user => user.email === email);
+    const user = allUser.find(user => user.email === email.toLowerCase());
     if (user) {
       setFoundUser(user);
       setSnackbarSeverity('success');

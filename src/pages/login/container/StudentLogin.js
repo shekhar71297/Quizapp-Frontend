@@ -81,7 +81,7 @@ export default function Login() {
       handleSnackbarOpen('Please enter login credentials', 'error');
       return;
     }
-    const user = allUser.find((user) => user.email === loginData.email);
+    const user = allUser.find((user) => user.email === loginData.email.toLowerCase());
     if (!user) {
       handleSnackbarOpen('Invalid email or password', 'error');
       return;

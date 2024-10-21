@@ -123,6 +123,7 @@ const ControlPanel = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isRole = sessionStorage.getItem("role") === "admin";
+  const isCounsellor = sessionStorage.getItem("role") === "counsellor"
   const role = sessionStorage.getItem('role')
   const userName = sessionStorage.getItem("user");
   const dispatch = useDispatch();
@@ -296,7 +297,7 @@ const ControlPanel = () => {
               </ListItem>
 
            {/*-----------------------------------Enrollment details module-------------------------------------- */}
-           {isRole && (
+           {(isRole || isCounsellor) && (
               <ListItem
              disablePadding
              sx={{ display: 'block' }}
@@ -327,7 +328,7 @@ const ControlPanel = () => {
            </ListItem>
            )}
              {/*-----------------------------------Enquiry details module-------------------------------------- */}
-             {isRole && (
+             {(isRole || isCounsellor) && (
              <ListItem
              disablePadding
              sx={{ display: 'block' }}
