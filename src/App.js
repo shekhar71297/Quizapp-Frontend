@@ -1,7 +1,7 @@
 import { Provider } from 'react-redux';
 import createStore from './store/index';
 import './App.css';
-import { RouterProvider, createBrowserRouter, useLocation } from 'react-router-dom';
+import { RouterProvider, createBrowserRouter, createHashRouter, useLocation } from 'react-router-dom';
 import ControlPanel from './pages/dashboard/ControlPanel';
 import ExamModule from './pages/exam/container/ExamModule';
 import VoucherModule from './pages/voucher/container/VoucherModule';
@@ -29,10 +29,19 @@ import BatchModule from './pages/batch/container/BatchModule';
 import AddBatch from './pages/batch/container/AddBatch';
 import EnrollmentModule from './pages/enrollment/container/EnrollmentModule';
 import EnquiryModule from './pages/enquiry/container/EnquiryModule';
+import { useEffect } from 'react';
 
 const store = createStore();
 
 function App() {
+//convert https protocol to http
+  useEffect(() => {
+    if (window.location.protocol === "https:") {
+      const httpURL = window.location.href.replace("https://", "http://");
+      window.location.replace(httpURL);
+    }
+  }, []);
+
   const colortheme = createTheme({
     palette: {
       primary: {
@@ -43,7 +52,7 @@ function App() {
       },
     },
   });
-  const router = createBrowserRouter([
+  const router = createHashRouter([
     { path: '', element: <StudentLogin /> },
     { path: '/quizapp', element: <PrivateRoute> <VoucherValidation /></PrivateRoute> },
     { path: '/instruction', element: <PrivateRoute><Instructions /></PrivateRoute> },
@@ -126,7 +135,7 @@ function App() {
     </Provider>
 
   );
-  
+
 }
 const ShowAnswerWrapper = () => {
   const location = useLocation();

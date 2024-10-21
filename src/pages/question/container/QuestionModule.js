@@ -50,7 +50,7 @@ import { questionActions } from '../questionSliceReducer';
 import { capitalizeFirstLetter } from '../../../component/common/CapitalizeFirstLetter';
 import CancelIcon from '@mui/icons-material/Cancel';
 import './question.css'
-
+import * as validation from '../../../utils/constant';
 const QuestionModule = () => {
   const [formValues, setFormValues] = useState({
     open: false,
@@ -86,6 +86,13 @@ const QuestionModule = () => {
   const Alert = React.forwardRef(function Alert(props, ref) {
     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
   });
+
+  const [errors, setErrors] = useState(
+    {
+      marksError: false,
+
+    }
+  );
 
   useEffect(() => {
     Get(urls.exams)
@@ -165,6 +172,18 @@ const QuestionModule = () => {
 
   };
 
+  const handleBlur = (event) => {
+    const { name, value } = event.target;
+
+    if (name === 'marks') { // Corrected 'Password' to 'password'
+      const isMarksError = !validation.isValidMark(value);
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        marksError: isMarksError,
+
+      }));
+    }
+  }
   const handleSnackbarClose = () => {
     setErrorSnackbarOpen(false);
   };
@@ -380,7 +399,7 @@ const QuestionModule = () => {
   //-------------------------------------Export csv format----------------------------//
   const handleExportCSVFormat = () => {
     const headers = ['question', 'option1', 'option2', 'option3', 'option4', 'answer', 'marks', 'level', 'exam_id'];
-    const demoData = ["HTML stands for?", "HyperText Machine Language", "HyperText Markup Language","HyperText Marking Language","HighText Marking Language","option2","1","simple/intermediate/complex","1"];
+    const demoData = ["HTML stands for?", "HyperText Machine Language", "HyperText Markup Language", "HyperText Marking Language", "HighText Marking Language", "option2", "1", "simple/intermediate/complex", "1"];
     // Create CSV content with headers and one row of demo data
     const csvContent = `data:text/csv;charset=utf-8,${headers.join(',')}\n${demoData.join(',')}\n`;
     // Create a download link for the CSV file with headers and demo data
@@ -463,7 +482,7 @@ const QuestionModule = () => {
                         onClick={handleClickOpen}>
                         Add
                       </Button>
-                      {filteredQuestions.length > 0 ?( <Button
+                      {filteredQuestions.length > 0 ? (<Button
                         variant="contained"
                         color="primary"
                         component={'button'}
@@ -473,8 +492,8 @@ const QuestionModule = () => {
                         onClick={handleExportCSV} // Attach the event handler to the button
                       >
                         Export CSV
-                      </Button>): null}
-                     
+                      </Button>) : null}
+
                     </div>
                   )}
                   {!selectedExam && (
@@ -489,7 +508,7 @@ const QuestionModule = () => {
                     >
                       Export CSV Format
                     </Button>
-                    
+
                   )}
                   <FormControl size='small' >
                     <InputLabel id="demo-simple-select-autowidth-label" style={{ fontSize: isSmallScreen ? '12px' : '16px' }}>Select Exam</InputLabel>
@@ -569,10 +588,10 @@ const QuestionModule = () => {
                         onChange={(e) => handleOptionChange('answer', e.target.value)}
                         label="Answer"
                       >
-                        <MenuItem value='option1'>option1</MenuItem>
-                        <MenuItem value='option2'>option2</MenuItem>
-                        <MenuItem value='option3'>option3</MenuItem>
-                        <MenuItem value='option4'>option4</MenuItem>
+                        <MenuItem value='option1'>Option1</MenuItem>
+                        <MenuItem value='option2'>Option2</MenuItem>
+                        <MenuItem value='option3'>Option3</MenuItem>
+                        <MenuItem value='option4'>Option4</MenuItem>
                       </Select>
                     </FormControl>
                     <FormControl fullWidth sx={{ marginTop: '24px' }} >
@@ -586,7 +605,7 @@ const QuestionModule = () => {
                         onChange={(e) => handleOptionChange('level', e.target.value)}
                       >
                         {questionLevels.map((level, index) => (
-                          <MenuItem key={index} value={level}>{level}</MenuItem>
+                          <MenuItem key={index} value={level}>{capitalizeFirstLetter(level)}</MenuItem>
                         ))}
                       </Select>
                     </FormControl>
@@ -599,7 +618,10 @@ const QuestionModule = () => {
                       value={marks}
                       name='marks'
                       onChange={(e) => handleOptionChange('marks', e.target.value)}
-                      helperText={'eg:1,2,3,4'}
+                      onBlur={handleBlur}
+                      inputProps={{maxLength:2}}
+                      error={errors.marksError}
+                      helperText={(errors.marksError && validation.errorText("Invalid marks.E.g-1,10"))}
                     />
                     <TextField
                       fullWidth
@@ -632,7 +654,7 @@ const QuestionModule = () => {
               </Dialog>
 
               <TableRow>
-                <TableCell align="center"><Typography component="span" variant="subtitle1" sx={{ fontWeight: "bold" }}>{filteredQuestions.length> 0 ? 'Questions' :'Questions not found' }</Typography>
+                <TableCell align="center"><Typography component="span" variant="subtitle1" sx={{ fontWeight: "bold" }}>{filteredQuestions.length > 0 ? 'Questions' : 'Questions not found'}</Typography>
                 </TableCell>
               </TableRow>
               <TableBody>
@@ -687,25 +709,25 @@ const QuestionModule = () => {
 
                     )
                   }))}
-                  
+
               </TableBody>
               {filteredQuestions?.length > 0 ? (
                 <TablePagination
-                rowsPerPageOptions={[5, 10, 25]}
-                colSpan={7}
-                count={filteredQuestions.length}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                SelectProps={{
-                  inputProps: { 'aria-label': 'rows per page' },
-                  native: true,
-                }}
-                onPageChange={handleChangePage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-              />
+                  rowsPerPageOptions={[5, 10, 25]}
+                  colSpan={7}
+                  count={filteredQuestions.length}
+                  rowsPerPage={rowsPerPage}
+                  page={page}
+                  SelectProps={{
+                    inputProps: { 'aria-label': 'rows per page' },
+                    native: true,
+                  }}
+                  onPageChange={handleChangePage}
+                  onRowsPerPageChange={handleChangeRowsPerPage}
+                />
 
-              ):null}
-              
+              ) : null}
+
             </Table>
           </TableContainer>
         </CardContent>

@@ -1,0 +1,16 @@
+.password_error{
+display: flex;
+flex-direction: row;
+}
+.pass_error_icon{
+color: #f44336;
+font-size: 25px;
+padding-top: 16px;
+padding-right: 3px;
+padding-left: 16px;
+}
+.pass-error{
+  color: #f44336;
+  text-align:left;
+ 
+}

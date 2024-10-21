@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import Container from '@mui/material/Container';
 import Paper from '@mui/material/Paper';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -21,17 +21,19 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import InputAdornment from '@mui/material/InputAdornment';
 import IconButton from '@mui/material/IconButton';
+import { MdErrorOutline } from "react-icons/md";
 import { AppBar, Toolbar } from '@mui/material';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import Menu from '@mui/material/Menu';
-import { useTheme } from '@material-ui/core/styles';
+import { formatMs, useTheme } from '@material-ui/core/styles';
 import * as validation from '../../../utils/constant';
 import { userActions } from '../userSliceReducer';
 import { Get, Post } from '../../../services/Http.Service';
 import { urls } from '../../../utils/constant';
 import { capitalizeFirstLetter } from '../../../component/common/CapitalizeFirstLetter';
 import CustomAppBar from '../../../component/common/CustomAppBar';
-import logoimg from '../../../asset/img/Hematite Logo.jpg'
+import logoimg from '../../../asset/img/Hematite Logo.jpg';
+import './form.css';
 const RegistrationForm = () => {
   const [formData, setFormData] = useState({
     fname: '',
@@ -58,6 +60,8 @@ const RegistrationForm = () => {
     pnrNoError: false,
     passwordError: false,
     password2Error: false,
+    matchPasswordError: false,
+    otherBranchError: false
   });
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -65,6 +69,7 @@ const RegistrationForm = () => {
   const [severity, setSeverity] = useState('');
   const [passwordVisibility, setPasswordVisibility] = React.useState(false);
   const [password2Visibility, setPassword2Visibility] = React.useState(false);
+  const [showLogin, setShowLogin] = React.useState(false)
   const { allBranch } = useSelector((store) => store.user)
   const { allUser } = useSelector((store) => store.user)
   const dispatch = useDispatch();
@@ -74,6 +79,7 @@ const RegistrationForm = () => {
   const currentYear = new Date().getFullYear();
   const [anchorEl, setAnchorEl] = useState(null);
   const copyrightText = `© 2017-${currentYear} Hematite Infotech, All Rights Reserved.`;
+  const location = useLocation();
   useEffect(() => {
     // initBranchRequest();
     Get(urls.branch)
@@ -91,6 +97,12 @@ const RegistrationForm = () => {
       dispatch(userActions.getUser(reversedexam));
     })
       .catch(error => console.log("user error: ", error));
+  }, [])
+
+  useEffect(() => {
+    if (location.pathname === '/student-registration' || location.pathname === '/employee-registration') {
+      setShowLogin(true)
+    }
   }, [])
 
 
@@ -111,7 +123,10 @@ const RegistrationForm = () => {
         [name]: value,
       });
     }
+
   };
+
+
 
 
   const handleBlur = (event) => {
@@ -140,13 +155,23 @@ const RegistrationForm = () => {
       }));
     }
 
-    if (name === 'pnrNo') {
+    if (name === 'prnNo') {
       const ispnrNoError = !validation.isValidPnr(value);
       setErrors((prevErrors) => ({
         ...prevErrors,
         pnrNoError: ispnrNoError,
       }));
     }
+
+
+    if (name === 'otherbranch') {
+      const isOtherBranchError = !validation.isValidOtherBranch(value);
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        otherBranchError: isOtherBranchError,
+      }));
+    }
+
     if (name === 'password') { // Corrected 'Password' to 'password'
       const isPasswordError = !validation.isValidPassword(value);
       setErrors((prevErrors) => ({
@@ -155,6 +180,7 @@ const RegistrationForm = () => {
 
       }));
     }
+
     if (name === 'password2') { // Corrected 'Password' to 'password'
       const isPasswordError = !validation.isValidPassword(value);
       setErrors((prevErrors) => ({
@@ -163,6 +189,22 @@ const RegistrationForm = () => {
 
       }));
     }
+    if (formData.password !== '' && formData.password2 !== '') {
+      if (formData.password !== formData.password2) { // CheckPassword
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          matchPasswordError: true,
+
+        }));
+      } else {
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          matchPasswordError: false,
+
+        }));
+      }
+    }
+
     if (name === 'branch' && value === 'Branch') {
       setFormData((prevFormData) => ({
         ...prevFormData,
@@ -170,6 +212,11 @@ const RegistrationForm = () => {
         otherbranch: '',
         organization: 'Hematite branch'
       }));
+      setErrors({
+        ...errors,
+        otherBranchError: false,
+        pnrNoError: false
+      })
     }
     if (name === 'branch') {
       const selectedBranchObject = allBranch.find(branchObj => branchObj.branchName === value);
@@ -191,7 +238,12 @@ const RegistrationForm = () => {
         otherbranch: '',
         organization: 'Cdac'
       }));
+      setErrors({
+        ...errors,
+        otherBranchError: false
+      })
     }
+
     if (name === 'branch' && value === 'otherbranch') {
       setFormData((prevFormData) => ({
         ...prevFormData,
@@ -201,6 +253,11 @@ const RegistrationForm = () => {
         organization: 'Other branch'
         // otherbranch: '',
       }));
+      setErrors({
+        ...errors,
+        pnrNoError: false
+      })
+
     }
 
   };
@@ -224,14 +281,17 @@ const RegistrationForm = () => {
       return; // Return early if passwords don't match
     }
 
+
     if (
       errors.fnameError ||
       errors.lnameError ||
       errors.emailError ||
       errors.contactError ||
       errors.pnrNoError ||
-      errors.passwordError||
-      errors.password2Error
+      errors.passwordError ||
+      errors.password2Error ||
+      errors.otherBranchError ||
+      errors.matchPasswordError
     ) {
       setSnackbarOpen(true);
       setSeverity('error');
@@ -239,9 +299,29 @@ const RegistrationForm = () => {
       return;
     }
 
+    if (branch == 'otherbranch' && otherbranch == '') {
+      setSnackbarOpen(true);
+      setSeverity('error');
+      setSnackbarMessage('Please enter other branch.');
+      return;
+    }
+    if (branch == 'cdac' && (prnNo == '' || prnNo == null)) {
+
+      setSnackbarOpen(true);
+      setSeverity('error');
+      setSnackbarMessage('Please enter PNR No.');
+      return;
+    }
+    const updatedFormData = {
+      ...formData,
+      email: formData.email.toLowerCase(),
+      fname: formData.fname.toLowerCase(),
+      lname: formData.lname.toLowerCase(),
+    };
+
     // Dispatch add student action
     // addStudentRequest(formData);
-    Post(urls.student, formData)
+    Post(urls.student, updatedFormData)
       .then(response => {
         dispatch(userActions.addUser(response.data));
         // Show success snackbar
@@ -250,9 +330,10 @@ const RegistrationForm = () => {
         setSnackbarMessage('Student Registered successfully');
       })
       .catch(error => {
-      setSnackbarOpen(true);
-      setSeverity('error');
-      setSnackbarMessage("Somethings went's wrong.please try again.")});
+        setSnackbarOpen(true);
+        setSeverity('error');
+        setSnackbarMessage("Registration Failed.")
+      });
 
     // Clear form data
     setFormData({
@@ -322,50 +403,76 @@ const RegistrationForm = () => {
 
 
 
-  const { fname, lname, email, contact, gender, role, prnNo, branch, otherbranch, password, password2 } = formData;
-  const isSubmitDisabled = !fname || !lname || !email || !contact || !gender || !password || (!branch && !prnNo) || errors.fnameError || errors.lnameError || errors.emailError || errors.contactError || errors.passwordError || errors.pnrNoError|| errors.password2Error ;
+  const { fname, lname, email, contact, gender, role, prnNo, branch, otherbranch, password, password2, organization } = formData;
+  const isSubmitDisabled = !fname || !lname || !email || !contact || !gender || !password || !organization || !branch || errors.fnameError ||
+    errors.lnameError || errors.emailError || errors.contactError || errors.passwordError || errors.otherBranchError || errors.pnrNoError || errors.password2Error || errors.matchPasswordError;
 
   return (
     <>
       <AppBar color='primary' position="sticky">
         <Toolbar >
-        <div style={{ display: 'flex', marginRight: '10px' }} >
+          <div style={{ display: 'flex', marginRight: '10px' }} >
             <img style={isSmallScreen ? { width: "40px", height: "35px", borderRadius: "64%", boxShadow: "white 0px 0px 6px -1px" } : { width: "50px", height: "46px", borderRadius: "64%", boxShadow: "white 0px 0px 6px -1px" }} src={logoimg} alt="logoimg" />
           </div>
           <Typography component="div" sx={{ flexGrow: 1 }} style={{ textAlign: 'left', width: '90px' }}>
             {isSmallScreen ? 'Hematite Infotech ' : 'Hematite Infotech Online-Quiz'}
           </Typography>
-
-        <Button
-            id="basic-menu"
-            aria-controls={anchorEl ? 'demo-positioned-menu' : undefined}
-            aria-haspopup="true"
-            aria-expanded={Boolean(anchorEl)}
-            onClick={handleClick}
-            variant="outlined"
-            size='small'
-            sx={{
-              color: '#FFFFFF',
-              '&:hover': {
-                color: 'primary.main',
-                backgroundColor: '#FFFFFF', // Specify same color for hover state
-              }
-            }}
-          >
-            Sign up
-          </Button>
-          <Menu
-           id="basic-menu"
-           anchorEl={anchorEl}
-           open={Boolean(anchorEl)}
-           onClose={handleClose}
-           MenuListProps={{
-             'aria-labelledby': 'basic-button',
-           }}
-          >
-            <MenuItem onClick={handleStudent}>Student</MenuItem>
-            <MenuItem onClick={handleEmployee}>Employee</MenuItem>
-          </Menu>
+          <div style={{ display: 'flex', flexDirection: 'row' }}>
+            <Button
+              id="basic-menu"
+              aria-controls={anchorEl ? 'demo-positioned-menu' : undefined}
+              aria-haspopup="true"
+              aria-expanded={Boolean(anchorEl)}
+              onClick={navigateToBack}
+              variant="outlined"
+              size='small'
+              sx={{
+                color: '#FFFFFF',
+                marginTop:'3px',
+                '&:hover': {
+                  color: 'primary.main',
+                  backgroundColor: '#FFFFFF', // Specify same color for hover state
+                 
+                }
+              }}
+            >
+              Login
+            </Button>
+            <Typography sx={{}} variant="h6" noWrap component="div">
+              |
+            </Typography>
+            <Button
+              id="basic-menu"
+              aria-controls={anchorEl ? 'demo-positioned-menu' : undefined}
+              aria-haspopup="true"
+              aria-expanded={Boolean(anchorEl)}
+              onClick={handleClick}
+              variant="outlined"
+              size='small'
+              sx={{
+                color: '#FFFFFF',
+                marginTop:'3px',
+                '&:hover': {
+                  color: 'primary.main',
+                  backgroundColor: '#FFFFFF', // Specify same color for hover state
+                }
+              }}
+            >
+              Sign up
+            </Button>
+            <Menu
+              id="basic-menu"
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleClose}
+              MenuListProps={{
+                'aria-labelledby': 'basic-button',
+              }}
+            >
+              <MenuItem onClick={handleStudent}>Student</MenuItem>
+              <MenuItem onClick={handleEmployee}>Employee</MenuItem>
+            </Menu>
+          </div>
         </Toolbar>
       </AppBar>
       <Container component="main" maxWidth="sm" sx={{ marginTop: '3rem' }}>
@@ -388,25 +495,23 @@ const RegistrationForm = () => {
                 </Typography>
                 <form onSubmit={handleSubmit} >
                   <Stack spacing={2} direction={isSmallScreen ? 'column' : 'row'}>
-
                     <TextField
                       type="text"
                       variant='outlined'
                       color='primary'
-                      label="First Name"
+                      label={<span>First Name <span style={{ color: 'red' }}>*</span></span>}  // Add asterisk
                       onChange={handleChange}
                       onBlur={handleBlur}
                       value={fname}
                       name='fname'
                       fullWidth
-                      required
+                      inputProps={{ maxLength: 20 }}
                       size='small'
                       error={errors.fnameError}
-                      helperText={(errors.fnameError && validation.errorText("Please enter a valid first name")) || "eg:John"}
+                      helperText={(errors.fnameError && validation.errorText("Invalid first name"))}
                       InputLabelProps={{
                         style: {
                           fontSize: isSmallScreen ? '12px' : '16px', // Adjust label font size based on screen size
-                          // Add more label styles here
                         },
                       }}
                     />
@@ -415,45 +520,43 @@ const RegistrationForm = () => {
                       type="text"
                       variant='outlined'
                       color='primary'
-                      label="Last Name"
+                      label={<span>Last Name <span style={{ color: 'red' }}>*</span></span>}  // Add asterisk
                       onChange={handleChange}
                       onBlur={handleBlur}
                       value={lname}
                       name='lname'
                       fullWidth
-                      required
+                      inputProps={{ maxLength: 20 }}
                       size='small'
                       error={errors.lnameError}
-                      helperText={(errors.lnameError && validation.errorText("Please enter a valid last name")) || 'eg: Doe'}
+                      helperText={(errors.lnameError && validation.errorText("Invalid last name"))}
                       InputLabelProps={{
                         style: {
-                          fontSize: isSmallScreen ? '12px' : '16px', // Adjust label font size based on screen size
-                          // Add more label styles here
+                          fontSize: isSmallScreen ? '12px' : '16px',
                         },
                       }}
                     />
-
                   </Stack>
-                  <Stack spacing={2} direction={isSmallScreen ? 'column' : 'row'} sx={{marginTop:'10px'}}>
+
+                  <Stack spacing={2} direction={isSmallScreen ? 'column' : 'row'} sx={{ marginTop: '20px' }}>
                     <TextField
                       type="email"
                       variant='outlined'
                       color='primary'
-                      label="Email"
+                      label={<span>Email <span style={{ color: 'red' }}>*</span></span>}  // Add asterisk
                       onChange={handleChange}
                       onBlur={handleBlur}
                       value={email}
                       name='email'
                       fullWidth
-                      required
                       size='small'
+                      inputProps={{ maxLength: 30 }}
                       sx={{ mb: 4 }}
                       error={errors.emailError}
-                      helperText={(errors.emailError && validation.errorText("Please enter a valid email id")) || "eg:jhon@gmail.com"}
+                      helperText={(errors.emailError && validation.errorText("Invalid email id"))}
                       InputLabelProps={{
                         style: {
-                          fontSize: isSmallScreen ? '12px' : '16px', // Adjust label font size based on screen size
-                          // Add more label styles here
+                          fontSize: isSmallScreen ? '12px' : '16px',
                         },
                       }}
                     />
@@ -462,103 +565,90 @@ const RegistrationForm = () => {
                       type="tel"
                       variant='outlined'
                       color='primary'
-                      label="Contact Number"
+                      label={<span>Contact Number <span style={{ color: 'red' }}>*</span></span>}  // Add asterisk
                       onChange={handleChange}
                       onBlur={handleBlur}
                       value={contact}
                       name='contact'
                       fullWidth
-                      required
                       size='small'
+                      inputProps={{ maxLength: 10 }}
                       sx={{ mb: 4 }}
                       error={errors.contactError}
-                      helperText={(errors.contactError && validation.errorText("Please enter a valid contact number")) || "eg:9922334422"}
+                      helperText={(errors.contactError && validation.errorText("Invalid contact number"))}
                       InputLabelProps={{
                         style: {
-                          fontSize: isSmallScreen ? '12px' : '16px', // Adjust label font size based on screen size
-                          // Add more label styles here
+                          fontSize: isSmallScreen ? '12px' : '16px',
                         },
                       }}
                     />
                   </Stack>
-                  <Stack spacing={2} direction={isSmallScreen ? 'column' : 'row'} sx={{marginTop:'10px'}} >
+
+                  <Stack spacing={2} direction={isSmallScreen ? 'column' : 'row'} sx={{ marginTop: '20px' }}>
                     <TextField
-                      type={passwordVisibility ? 'text' : 'password'} // Toggle password visibility
+                      type={passwordVisibility ? 'text' : 'password'}
                       variant='outlined'
                       color='primary'
+                      label={<span>Password <span style={{ color: 'red' }}>*</span></span>}  // Add asterisk
                       onChange={handleChange}
                       onBlur={handleBlur}
                       value={password}
                       name='password'
-                      label='Password'
                       fullWidth
-                      required
                       size='small'
                       InputProps={{
                         endAdornment: (
                           <InputAdornment position='end'>
-                            <IconButton
-                              onClick={() => {
-                                // Toggle password visibility
-                                setPasswordVisibility((prevState) => !prevState);
-                              }}
-                              edge='end'
-                            >
+                            <IconButton onClick={() => setPasswordVisibility(prevState => !prevState)} edge='end'>
                               {passwordVisibility ? <VisibilityIcon /> : <VisibilityOffIcon />}
                             </IconButton>
                           </InputAdornment>
                         ),
                       }}
+                      inputProps={{ maxLength: 20 }}
                       sx={{ mb: 4 }}
                       error={errors.passwordError}
-                      helperText={(errors.passwordError && validation.errorText("Please enter a valid password")) || "eg:Abcd@1234"}
+                      helperText={(errors.passwordError && validation.errorText("Invalid password"))}
                       InputLabelProps={{
                         style: {
-                          fontSize: isSmallScreen ? '12px' : '16px', // Adjust label font size based on screen size
-                          // Add more label styles here
+                          fontSize: isSmallScreen ? '12px' : '16px',
                         },
                       }}
                     />
+
                     <TextField
-                      type={password2Visibility ? 'text' : 'password'} // Toggle password visibility
+                      type={password2Visibility ? 'text' : 'password'}
                       variant='outlined'
                       color='primary'
+                      label={<span>Confirm Password <span style={{ color: 'red' }}>*</span></span>}  // Add asterisk
                       onChange={handleChange}
                       onBlur={handleBlur}
                       value={password2}
                       name='password2'
-                      label='Confirm Password'
                       fullWidth
-                      required
                       size='small'
-                      error={errors.password2Error}
-                      helperText={(errors.password2Error && validation.errorText("Please enter a valid password") )|| "eg:Abcd@1234"}
                       InputProps={{
                         endAdornment: (
                           <InputAdornment position='end'>
-                            <IconButton
-                              onClick={() => {
-                                // Toggle password visibility
-                                setPassword2Visibility((prevState) => !prevState);
-                              }}
-                              edge='end'
-                            >
+                            <IconButton onClick={() => setPassword2Visibility(prevState => !prevState)} edge='end'>
                               {password2Visibility ? <VisibilityIcon /> : <VisibilityOffIcon />}
                             </IconButton>
                           </InputAdornment>
                         ),
                       }}
+                      inputProps={{ maxLength: 14 }}
                       sx={{ mb: 4 }}
+                      error={errors.matchPasswordError}
+                      helperText={(errors.matchPasswordError && validation.errorText("Password and Confirm Password doesn't match"))}
                       InputLabelProps={{
                         style: {
-                          fontSize: isSmallScreen ? '12px' : '16px', // Adjust label font size based on screen size
-                          // Add more label styles here
+                          fontSize: isSmallScreen ? '12px' : '16px',
                         },
                       }}
                     />
-
                   </Stack>
-                  {(errors.passwordError || errors.password2Error) && (
+
+                  {errors.passwordError && (
                     <div>
                       <ul style={{ color: '#f44336', textAlign: 'left', paddingLeft: '20px', margin: '5px 0' }}>
                         <li>One lowercase character</li>
@@ -566,12 +656,20 @@ const RegistrationForm = () => {
                         <li>One number</li>
                         <li>One special character</li>
                         <li>8 characters minimum</li>
+                        <li>Password should be minimum 8 characters </li>
+                        <li>Password should be maximum 14 characters</li>
                       </ul>
                     </div>
                   )}
 
-                  <FormControl fullWidth size='small' sx={{marginTop:'10px'}}>
-                    <InputLabel sx={{ fontSize: isSmallScreen ? '12px' : '16px' }} id="demo-simple-select-autowidth-label">Select Role</InputLabel>
+
+                  <FormControl fullWidth size='small' sx={{ marginTop: '20px' }}>
+                    <InputLabel
+                      sx={{ fontSize: isSmallScreen ? '12px' : '16px' }}
+                      id="demo-simple-select-autowidth-label"
+                    >
+                      Select Role <span style={{ color: 'red' }}>*</span>
+                    </InputLabel>
                     <Select
                       labelId="demo-simple-select-autowidth-label"
                       id="demo-simple-select-autowidth-label"
@@ -581,9 +679,8 @@ const RegistrationForm = () => {
                       onBlur={handleBlur}
                       autoWidth
                       label="Select Role"
-
+                      required
                       color='primary'
-
                     >
                       <MenuItem value='' aria-label='Choose role'>Select Role</MenuItem>
                       <MenuItem value='student'>Student</MenuItem>
@@ -592,24 +689,9 @@ const RegistrationForm = () => {
                   </FormControl>
 
                   <FormControl fullWidth>
-                    <p style={{ fontWeight: 'bold', fontSize: isSmallScreen ? '14px' : '16px', textAlign: 'left' }} >Select Gender</p>
-                    <RadioGroup
-                      aria-label="gender"
-                      name="gender"
-                      value={gender || " "}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      row
-
-                    >
-                      <FormControlLabel value="male" control={<Radio />} label="Male" />
-                      <FormControlLabel value="female" control={<Radio />} label="Female" />
-                      <FormControlLabel value="other" control={<Radio />} label="Other" />
-                    </RadioGroup>
-                  </FormControl>
-
-                  <FormControl fullWidth >
-                    <p style={{ textAlign: 'left', fontWeight: 'bold', fontSize: isSmallScreen ? '14px' : '16px' }} >Select Branch</p>
+                    <p style={{ textAlign: 'left', fontWeight: 'bold', fontSize: isSmallScreen ? '14px' : '16px' }}>
+                      Select Branch <span style={{ color: 'red' }}>*</span>
+                    </p>
                     <RadioGroup
                       row
                       aria-labelledby="demo-row-radio-buttons-group-label"
@@ -617,23 +699,22 @@ const RegistrationForm = () => {
                       value={branch || " "}
                       onChange={handleChange}
                       onBlur={handleBlur}
-
-
                     >
-                      <br />
                       <FormControlLabel value="Branch" control={<Radio />} label="Hematite Branch" />
                       <FormControlLabel value="cdac" control={<Radio />} label="CDAC" />
                       <FormControlLabel value="otherbranch" control={<Radio />} label="Other" />
                     </RadioGroup>
 
-                    {branch === 'Branch' &&
-                      <FormControl fullWidth size='small' >
-                        <InputLabel sx={{ fontSize: isSmallScreen ? '12px' : '16px' }} id="demo-simple-select-autowidth-label">Select Branch</InputLabel>
+                    {branch === 'Branch' && (allBranch && allBranch.length > 1 ? (
+                      <FormControl fullWidth size='small'>
+                        <InputLabel sx={{ fontSize: isSmallScreen ? '12px' : '16px' }} id="demo-simple-select-autowidth-label">
+                          Select Branch <span style={{ color: 'red' }}>*</span>
+                        </InputLabel>
                         <Select
                           labelId="demo-simple-select-autowidth-label"
                           id="demo-simple-select-autowidth-label"
                           name='selectedBranch'
-                          value={selectedBranch} // Use selectedBranch as the value
+                          value={selectedBranch}
                           onChange={handleChange}
                           onBlur={handleBlur}
                           aria-label='Choose branch'
@@ -646,61 +727,81 @@ const RegistrationForm = () => {
                             <MenuItem key={val.id} value={val.id}>{capitalizeFirstLetter(val.branchName)}</MenuItem>
                           ))}
                         </Select>
-
-                        <br />
                       </FormControl>
-                    }
+                    ) : (
+                      <TextField
+                        fullWidth
+                        size='small'
+                        value={allBranch && allBranch[0] ? allBranch[0].branchName : ''}
+                        name='selectedBranch'
+                        label="Branch"
+                        InputProps={{
+                          readOnly: true,
+                        }}
+                      />
+                    ))}
 
-
-                    {branch === 'cdac' &&
+                    {branch === 'cdac' && (
                       <TextField
                         id="prnNo"
                         variant="outlined"
                         color="primary"
-                        label="Prn No"
+                        label="PRN No"
                         name="prnNo"
                         value={prnNo}
                         onChange={handleChange}
                         onBlur={handleBlur}
+                        inputProps={{ maxLength: 20 }}
                         error={errors.pnrNoError}
-                        helperText={(errors.pnrNoError && validation.errorText("Please enter a valid prnNo")) || "eg:PRN2018015200996601"}
+                        helperText={(errors.pnrNoError && validation.errorText("Please enter a valid prnNo"))}
                         fullWidth
                         size='small'
                       />
-                    }
+                    )}
 
-                    {branch === 'otherbranch' &&
+                    {branch === 'otherbranch' && (
                       <TextField
                         id="otherbranch"
                         variant="outlined"
                         color="primary"
-                        label="otherbranch"
+                        label="Other branch"
                         name="otherbranch"
                         value={otherbranch}
+                        inputProps={{ maxLength: 30 }}
                         onChange={handleChange}
                         onBlur={handleBlur}
-                        sx={{ mb: 4 }}
                         fullWidth
                         size='small'
+                        error={errors.otherBranchError}
+                        helperText={(errors.otherBranchError && validation.errorText("Invalid other branch"))}
                       />
-                    }
+                    )}
                   </FormControl>
+
+                  <FormControl fullWidth>
+                    <p style={{ fontWeight: 'bold', fontSize: isSmallScreen ? '14px' : '16px', textAlign: 'left' }}>
+                      Select Gender <span style={{ color: 'red' }}>*</span>
+                    </p>
+                    <RadioGroup
+                      aria-label="gender"
+                      name="gender"
+                      value={gender || " "}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      sx={{ mb: 4 }}
+                      row
+                    >
+                      <FormControlLabel value="male" control={<Radio />} label="Male" />
+                      <FormControlLabel value="female" control={<Radio />} label="Female" />
+                      <FormControlLabel value="other" control={<Radio />} label="Other" />
+                    </RadioGroup>
+                  </FormControl>
+
+                  
                   <Stack spacing={2} direction="row" sx={{ marginTop: '8px', display: 'flex', flexDirection: 'row' }}>
                     <Button variant="contained" color="primary" type="submit" size='small' disabled={isSubmitDisabled}>Submit</Button>
                     <Button type="button" size='small' onClick={() => resetFormHandler()} variant="contained" color="primary">Clear</Button>
-                    {isSmallScreen ?
-                      <a href="" style={{ color: "GrayText", fontSize: '12px' }} onClick={(e) => navigateToBack(e)}>
-                        Login ? Click Here
-                      </a> : ''
-                    }
                   </Stack>
-                  {!isSmallScreen ?
-                    <div style={{ display: 'flex', flexDirection: 'row', marginTop: '25px', justifyContent: 'left' }} >
-                      <a href="" style={{ color: "GrayText" }} onClick={(e) => navigateToBack(e)}>
-                        Login ? Click Here
-                      </a>
-                    </div> : ''
-                  }
                 </form>
 
               </div>

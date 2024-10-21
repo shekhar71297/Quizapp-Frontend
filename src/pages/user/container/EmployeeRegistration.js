@@ -69,6 +69,7 @@ function EmployeeRegistration() {
     severity: '',
     isFieldsEnabled: false,
     errors: {
+      empIdError:false,
       fnameError: false,
       lnameError: false,
       emailError: false,
@@ -76,7 +77,8 @@ function EmployeeRegistration() {
       pnrError: false,
       passwordError: false,
       password2Error: false,
-      employeeIdError: false
+      employeeIdError: false,
+      matchPasswordError: false
     },
   });
 
@@ -109,7 +111,7 @@ function EmployeeRegistration() {
           ...prevState,
           snackbarOpen: true,
           variant: 'filled',
-          snackbarMessage: 'Employee found successfully',
+          snackbarMessage: 'Employee located successfully',
           severity: 'success',
         }));
       }, 500)
@@ -145,6 +147,13 @@ function EmployeeRegistration() {
       ...prevState,
       [name]: value,
     }));
+    if (name === 'employeeId') {
+      const isEmpError = !validation.isValidEmpId(value);
+      setState((prevState) => ({
+        ...prevState,
+        errors: { ...prevState.errors, employeeIdError: isEmpError },
+      }));
+    }
   }
 
   const handleBlur = (event) => {
@@ -163,28 +172,21 @@ function EmployeeRegistration() {
         errors: { ...prevState.errors, password2Error: isPasswordError },
       }));
     }
-    
-
-    if (name === 'employeeId') {
-      if (!Number.isInteger(Number(value))) {
+    if (password !== '' && password2 !== '') {
+      if (password !== password2) { // CheckPassword
         setState((prevState) => ({
           ...prevState,
-          errors: {
-            ...prevState.errors,
-            employeeIdError: true,
-          },
-        }));
-      } else {
+          errors: { ...prevState.errors, matchPasswordError: true },
+        }))
+      }else{
         setState((prevState) => ({
           ...prevState,
-          errors: {
-            ...prevState.errors,
-            employeeIdError: false, // Clear the error state for employeeId field
-          },
-        }));
+          errors: { ...prevState.errors, matchPasswordError: false },
+        }))
       }
-      return;
     }
+
+   
   };
 
   const handleFieldChange = (event) => {
@@ -360,6 +362,30 @@ function EmployeeRegistration() {
           <Typography component="div" sx={{ flexGrow: 1 }} style={{ textAlign: 'left', width: '90px' }}>
             {isSmallScreen ? 'Hematite Infotech ' : 'Hematite Infotech Online-Quiz'}
           </Typography>
+          <div style={{ display: 'flex', flexDirection: 'row' }}>
+            <Button
+              id="basic-menu"
+              aria-controls={anchorEl ? 'demo-positioned-menu' : undefined}
+              aria-haspopup="true"
+              aria-expanded={Boolean(anchorEl)}
+              onClick={navigateToBack}
+              variant="outlined"
+              size='small'
+              sx={{
+                color: '#FFFFFF',
+                marginTop:'3px',
+                '&:hover': {
+                  color: 'primary.main',
+                  backgroundColor: '#FFFFFF', // Specify same color for hover state
+                 
+                }
+              }}
+            >
+              Login
+            </Button>
+            <Typography sx={{}} variant="h6" noWrap component="div">
+              |
+            </Typography>
        
         <Button
             id="basic-menu"
@@ -391,6 +417,7 @@ function EmployeeRegistration() {
             <MenuItem onClick={handleStudent}>Student</MenuItem>
             <MenuItem onClick={handleEmployee}>Employee</MenuItem>
           </Menu>
+          </div>
         </Toolbar>
       </AppBar>
 
@@ -423,15 +450,15 @@ function EmployeeRegistration() {
               type="text"
               variant="outlined"
               color="primary"
-              label="Enter Employee ID "
+              label={<span>Enter employee id<span style={{ color: 'red' }}>*</span></span>}
               onChange={handleChange}
               value={employeeId}
               name="employeeId"
               fullWidth
-              required
               size='small'
+              inputProps={{maxLength:3}}
               onBlur={handleFieldChange}
-              helperText={(state.errors.employeeIdError && validation.errorText('Please enter a valid employee id')) || 'eg:101'}
+              helperText={(state.errors.employeeIdError && validation.errorText('Invalid Employee Id'))}
               error={state.errors.employeeIdError}
               InputLabelProps={{
                 style: {
@@ -440,7 +467,7 @@ function EmployeeRegistration() {
                 },
               }}
             />
-            <Stack spacing={2} direction={isSmallScreen ? 'column' : 'row'} sx={{marginTop:'10px'}}>
+            <Stack spacing={2} direction={isSmallScreen ? 'column' : 'row'} sx={{marginTop:'20px'}}>
               <TextField
                 type="text"
                 variant="outlined"
@@ -455,7 +482,7 @@ function EmployeeRegistration() {
                 disabled={!isFieldsEnabled}
                 InputProps={{ readOnly: true }}
                 error={state.errors.fnameError}
-                helperText={(state.errors.fnameError && validation.errorText('Please enter a valid fname')) || 'eg:John'}
+                helperText={(state.errors.fnameError && validation.errorText('Invalid first name')) }
                 InputLabelProps={{
                   style: {
                     fontSize: isSmallScreen ? '12px' : '16px', // Adjust label font size based on screen size
@@ -477,7 +504,7 @@ function EmployeeRegistration() {
                 disabled={!isFieldsEnabled}
                 InputProps={{ readOnly: true }}
                 error={state.errors.lnameError}
-                helperText={(state.errors.lnameError && validation.errorText('Please enter a valid last name')) || 'eg: Doe'}
+                helperText={(state.errors.lnameError && validation.errorText('Invalid last name')) }
                 InputLabelProps={{
                   style: {
                     fontSize: isSmallScreen ? '12px' : '16px', // Adjust label font size based on screen size
@@ -487,7 +514,7 @@ function EmployeeRegistration() {
               />
             </Stack>
 
-            <Stack spacing={2} direction={isSmallScreen ? 'column' : 'row'} sx={{marginTop:'10px'}}>
+            <Stack spacing={2} direction={isSmallScreen ? 'column' : 'row'} sx={{marginTop:'20px'}}>
               <TextField
                 type="email"
                 variant="outlined"
@@ -502,7 +529,7 @@ function EmployeeRegistration() {
                 disabled={!isFieldsEnabled}
                 InputProps={{ readOnly: true }}
                 error={state.errors.emailError}
-                helperText={(state.errors.emailError && validation.errorText('Please enter a valid email')) || 'eg:jhon@gmail.com'}
+                helperText={(state.errors.emailError && validation.errorText('Invalid email')) }
                 InputLabelProps={{
                   style: {
                     fontSize: isSmallScreen ? '12px' : '16px', // Adjust label font size based on screen size
@@ -514,7 +541,7 @@ function EmployeeRegistration() {
                 type="tel"
                 variant="outlined"
                 color="primary"
-                label="+91 Contact Number"
+                label="Contact Number"
                 onChange={handleChange}
                 value={contact}
                 name="contact"
@@ -524,7 +551,7 @@ function EmployeeRegistration() {
                 disabled={!isFieldsEnabled}
                 InputProps={{ readOnly: true }}
                 error={state.errors.contactError}
-                helperText={(state.errors.contactError && validation.errorText('Please enter a valid contact')) || 'eg:9999999999'}
+                helperText={(state.errors.contactError && validation.errorText('Invalid contact number')) }
                 InputLabelProps={{
                   style: {
                     fontSize: isSmallScreen ? '12px' : '16px', // Adjust label font size based on screen size
@@ -534,18 +561,18 @@ function EmployeeRegistration() {
               />
             </Stack>
        
-            <Stack spacing={2} direction={isSmallScreen ? 'column' : 'row'} sx={{marginTop:'10px'}}>
+            <Stack spacing={2} direction={isSmallScreen ? 'column' : 'row'} sx={{marginTop:'20px'}}>
               <TextField
                 type={passwordVisibility ? 'text' : 'password'} // Toggle password visibility
                 variant="outlined"
                 color="primary"
-                label="Password"
+                label={<span>Password <span style={{ color: 'red' }}>*</span></span>}
                 onChange={handleChange}
                 value={password}
                 name="password"
                 onBlur={handleBlur}
                 fullWidth
-                required
+                
                 size='small'
                 disabled={!isFieldsEnabled}
                 InputProps={{
@@ -565,7 +592,7 @@ function EmployeeRegistration() {
                 }}
 
                 error={state.errors.passwordError}
-                helperText={(state.errors.passwordError && validation.errorText('Please enter a valid password')) || 'eg:Jhon@1234'}
+                helperText={(state.errors.passwordError && validation.errorText('Invalid password')) }
                 InputLabelProps={{
                   style: {
                     fontSize: isSmallScreen ? '12px' : '16px', // Adjust label font size based on screen size
@@ -577,15 +604,15 @@ function EmployeeRegistration() {
                 type={password2Visibility ? 'text' : 'password'} // Toggle password visibility
                 variant="outlined"
                 color="primary"
-                label="Confirm Password"
+                label={<span>Confirm Password <span style={{ color: 'red' }}>*</span></span>}
                 onChange={handleChange}
                 value={password2}
                 name="password2"
                 size='small'
                 onBlur={handleBlur}
                 disabled={!isFieldsEnabled}
-                error={state.errors.password2Error}
-                helperText={(state.errors.password2Error && validation.errorText('Please enter a valid password')) || 'eg:Jhon@1234'}
+                error={state.errors.matchPasswordError}
+                helperText={(state.errors.matchPasswordError && validation.errorText("Password and Confirm Password does't match"))}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position='end'>
@@ -602,7 +629,7 @@ function EmployeeRegistration() {
                   ),
                 }}
                 fullWidth
-                required
+               
                 InputLabelProps={{
                   style: {
                     fontSize: isSmallScreen ? '12px' : '16px', // Adjust label font size based on screen size
@@ -612,7 +639,7 @@ function EmployeeRegistration() {
               />
             </Stack>
 
-            {(state.errors.passwordError || state.errors.password2Error) && (
+            {state.errors.passwordError && (
               <div>
                 <ul style={{ color: '#f44336', textAlign: 'left', paddingLeft: '20px', margin: '5px 0' }}>
                   <li>One lowercase character</li>
@@ -677,7 +704,7 @@ function EmployeeRegistration() {
               />
             </Stack>
 
-            <Stack spacing={2} direction="row" sx={{ marginTop: '10px' }}>
+            <Stack spacing={2} direction="row" sx={{ marginTop: '20px' }}>
               <Button variant="contained" size='small' color="primary" type="submit" disabled={isSubmitDisabled}>
                 Submit
               </Button>
@@ -685,11 +712,11 @@ function EmployeeRegistration() {
                 Clear
               </Button>
             </Stack>
-            <div style={{ display: 'flex', flexDirection: 'row', marginTop: '25px', justifyContent: 'left' }} >
+            {/* <div style={{ display: 'flex', flexDirection: 'row', marginTop: '25px', justifyContent: 'left' }} >
               <a href="" style={{ color: "GrayText" }} onClick={(e) => navigateToBack(e)}>
                 Login ? Click Here
               </a> <br></br>
-            </div>
+            </div> */}
           </form>
         </div>
       </Box>

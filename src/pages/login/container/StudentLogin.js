@@ -1,4 +1,4 @@
-import React, { useEffect,useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import Avatar from '@mui/material/Avatar';
@@ -27,7 +27,7 @@ import { capitalizeFirstLetter } from '../../../component/common/CapitalizeFirst
 import logoimg from '../../../asset/img/Hematite Logo.jpg'
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-
+import * as validation from '../../../utils/constant';
 
 
 
@@ -45,6 +45,11 @@ export default function Login() {
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const currentYear = new Date().getFullYear();
   const copyrightText = `© 2017-${currentYear} Hematite Infotech, All Rights Reserved.`;
+  const [errors, setErrors] = useState({
+    emailError: false,
+    passwordError: false,
+  });
+
   useEffect(() => {
     Get(`${urls.user}`)
       .then((response) => {
@@ -72,7 +77,10 @@ export default function Login() {
       email: data.get('email'),
       password: data.get('password'),
     };
-
+    if (loginData.email === '' && loginData.password === '') {
+      handleSnackbarOpen('Please enter login credentials', 'error');
+      return;
+    }
     const user = allUser.find((user) => user.email === loginData.email);
     if (!user) {
       handleSnackbarOpen('Invalid email or password', 'error');
@@ -89,19 +97,21 @@ export default function Login() {
 
     Post(`${urls.token}`, loginData)
       .then((response) => {
+        handleSnackbarOpen('Login successful', 'success');
         if (response?.access) {
-          handleSnackbarOpen('Login successful', 'success');
+          setTimeout(() => {        
           sessionStorage.setItem('accessToken', response?.access);
           dispatch(loginActions.LOGIN_SUCCESS(response?.access));
-
           // Redirect based on user role
-          if (user.role === 'student' || user.role === 'intern') {
-            nav('/voucher');
-          } else if (user.role === 'trainer' || user.role === 'counsellor') {
-            nav('/dashboard/exam');
-          } else {
-            nav('/dashboard/student');
-          }
+         
+            if (user.role === 'student' || user.role === 'intern') {
+              nav('/voucher');
+            } else if (user.role === 'trainer' || user.role === 'counsellor') {
+              nav('/dashboard/exam');
+            } else {
+              nav('/dashboard/student');
+            }
+          }, 2000)
         }
       })
       .catch((error) => {
@@ -135,12 +145,8 @@ export default function Login() {
     nav('/forgetpassword'); // Navigate to the forgot password form page
   };
 
-  const handleRegistrationFormClick = (e) => {
-    e.preventDefault()
-    nav('/registration'); // Navigate to the registration form page
-  };
 
-  
+
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -148,15 +154,33 @@ export default function Login() {
   const handleClose = () => {
     setAnchorEl(null);
   };
+  const handleBlur = (event) => {
+    const { name, value } = event.target;
+    if (name === 'password' ) {
+      const isPasswordError = !validation.isValidPassword(value);
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        passwordError: isPasswordError,
+      }));
+    }
+
+    if (name === 'email') {
+      const isEmailError = !validation.isValidEmail(value);
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        emailError: isEmailError,
+      }));
+    }
+  }
 
   const handleStudent = () => {
-  
+
     nav('/student-registration')
     handleClose();
   };
 
   const handleEmployee = () => {
-    
+
     nav('/employee-registration')
     handleClose();
   };
@@ -172,8 +196,8 @@ export default function Login() {
           <Typography sx={{ flexGrow: 1, textAlign: 'left', width: '90px', fontSize: isSmallScreen ? '13px' : '20px' }} >
             Hematite Infotech Online-Quiz
           </Typography>
-       
-        <Button
+
+          <Button
             id="basic-menu"
             aria-controls={anchorEl ? 'demo-positioned-menu' : undefined}
             aria-haspopup="true"
@@ -192,20 +216,20 @@ export default function Login() {
             Sign up
           </Button>
           <Menu
-           id="basic-menu"
-           anchorEl={anchorEl}
-           open={Boolean(anchorEl)}
-           onClose={handleClose}
-           MenuListProps={{
-             'aria-labelledby': 'basic-button',
-           }}
+            id="basic-menu"
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleClose}
+            MenuListProps={{
+              'aria-labelledby': 'basic-button',
+            }}
           >
             <MenuItem onClick={handleStudent}>Student</MenuItem>
             <MenuItem onClick={handleEmployee}>Employee</MenuItem>
           </Menu>
         </Toolbar>
       </AppBar>
-      
+
       <Container component='main' maxWidth='xs' >
         <CssBaseline />
         <Box
@@ -232,8 +256,11 @@ export default function Login() {
               label='Email Address'
               name='email'
               autoComplete='email'
-              autoFocus
+              onBlur={handleBlur}
+              inputProps={{ maxLength: 30 }}
               size='small'
+              error={errors.emailError}
+              helperText={(errors.emailError && validation.errorText("Invalid email"))}
             />
             <TextField
               margin='normal'
@@ -243,8 +270,12 @@ export default function Login() {
               label='Password'
               type={passwordVisibility ? 'text' : 'password'}
               id='password'
+              inputProps={{ maxLength: 20 }}
               autoComplete='current-password'
               size='small'
+              onBlur={handleBlur}
+              error={errors.passwordError}
+              helperText={(errors.passwordError && validation.errorText("Invalid password"))}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position='end'>
@@ -280,7 +311,7 @@ export default function Login() {
       <CustomAppBar title={copyrightText} />
       <Snackbar
         open={openSnackbar}
-        autoHideDuration={6000}
+        autoHideDuration={3000}
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >

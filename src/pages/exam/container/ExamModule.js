@@ -13,7 +13,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
 import { TextField, Button, Card, CardContent } from '@mui/material';
-import { Box, Grid, Typography, Snackbar} from '@mui/material';
+import { Box, Grid, Typography, Snackbar } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import InputAdornment from '@mui/material/InputAdornment';
 import MuiAlert from '@mui/material/Alert';
@@ -49,7 +49,14 @@ function ExamModule() {
     totalQuestion: 0,
     showResult: false
   });
-  const [errors, setErrors] = useState();
+  const [errors, setErrors] = useState(
+    {
+      examNameError: false,
+      examTimeError: false,
+      totalQuestionError: false,
+
+    }
+  );
   const { allExam } = useSelector((store) => store.exam);
   const { SingleExam } = useSelector((store) => store.exam);
   const dispatch = useDispatch();
@@ -68,7 +75,7 @@ function ExamModule() {
 
   useEffect(() => {
     setExams([...allExam])
-  }, [allExam.length > 0,dispatch])
+  }, [allExam.length > 0, dispatch])
 
   useEffect(() => {
     setExams([...allExam])
@@ -93,6 +100,37 @@ function ExamModule() {
     }
   }, [SingleExam]);
 
+  const handleBlur = (event) => {
+    const { name, value } = event.target;
+
+    if (name === 'examName') { // Corrected 'Password' to 'password'
+      const isExamNameError = !validation.isValidExamName(value);
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        examNameError: isExamNameError,
+
+      }));
+    }
+
+    if (name === 'examTime') { // Corrected 'Password' to 'password'
+      const isExamTimeError = !validation.isValidExamTime(value);
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        examTimeError: isExamTimeError,
+
+      }));
+    }
+
+    if (name === 'totalQuestion') { // Corrected 'Password' to 'password'
+      const isTotalQuestionError = !validation.isValidQuestionCount(value);
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        totalQuestionError: isTotalQuestionError,
+
+      }));
+    }
+  }
+
 
   //-------- If the input type is radio, update the value based on the event---------- //
   const handleExamChange = (event) => {
@@ -101,7 +139,7 @@ function ExamModule() {
 
     setSelectedExam(prevState => ({
       ...prevState,
-      [name]: newValue
+      [name]: newValue.toLowerCase()
     }));
   };
 
@@ -217,7 +255,7 @@ function ExamModule() {
 
     closeDeletePopup();
     setSnackbarOpen(true);
-    setSnackbarMessage('Exam deleted successfully');
+    setSnackbarMessage('Exam Deleted!.');
     // initExamRequest()
   };
 
@@ -227,7 +265,7 @@ function ExamModule() {
 
 
 
-    const { id = null,  examName, examTime, examStatus, totalQuestion, showResult } = selectedExam;
+    const { id = null, examName, examTime, examStatus, totalQuestion, showResult } = selectedExam;
     const updatedExam = {
       id,
       examName,
@@ -240,7 +278,7 @@ function ExamModule() {
       id,
       examName,
       examTime,
-      examStatus:false,
+      examStatus: false,
       totalQuestion,
       showResult
     };
@@ -250,16 +288,16 @@ function ExamModule() {
     if (isAddExam) {
 
 
-        Post(urls.exams, AddExam)
-          .then(response => {
-            dispatch(examActions.ADD_EXAM(response.data))
-            const reverseExam = [response.data].reverse()
-            const reversedExam = [...reverseExam, ...allExam]
-            dispatch(examActions.GET_EXAM(reversedExam))
-          })
-          .catch(error => console.log("Exam error: ", error));
-        setSnackbarOpen(true);
-        setSnackbarMessage('Exam added successfully.');
+      Post(urls.exams, AddExam)
+        .then(response => {
+          dispatch(examActions.ADD_EXAM(response.data))
+          const reverseExam = [response.data].reverse()
+          const reversedExam = [...reverseExam, ...allExam]
+          dispatch(examActions.GET_EXAM(reversedExam))
+        })
+        .catch(error => console.log("Exam error: ", error));
+      setSnackbarOpen(true);
+      setSnackbarMessage('Exam Added!.');
 
 
     } else {
@@ -273,7 +311,7 @@ function ExamModule() {
           .catch(error => console.log("Exam error: ", error));
 
         setSnackbarOpen(true);
-        setSnackbarMessage('Exam updated successfully.');
+        setSnackbarMessage('Exam Updated!.');
       }
     }
 
@@ -331,10 +369,11 @@ function ExamModule() {
     const query = searchQuery.toLowerCase();
     const nameInludes = val?.examName && val?.examName?.toLowerCase().includes(query);
     const examIdIncludes = val?.id && val?.id?.toString().includes(query);
-    return nameInludes|| examIdIncludes;
+    return nameInludes || examIdIncludes;
   });
 
-  const isSubmitDisabled = !selectedExam.examName
+  const isSubmitDisabled = !selectedExam.examName || errors.examNameError||errors.examTimeError || errors.totalQuestionError
+  ||!selectedExam.examTime || !selectedExam.totalQuestion;
 
 
   return (
@@ -476,7 +515,10 @@ function ExamModule() {
                     value={selectedExam.examName}
                     onChange={handleExamChange}
                     size='small'
-                    helperText={'eg:Java,php'}
+                    inputProps={{maxLength:30}}
+                    onBlur={handleBlur}
+                    error={errors.examNameError}
+                    helperText={(errors.examNameError && validation.errorText("Invalid Exam Name"))}
                   />
                 </Grid>
                 <Grid item xs={12} >
@@ -489,8 +531,11 @@ function ExamModule() {
                     value={selectedExam.examTime}
                     onChange={handleExamChange}
                     size='small'
-                    placeholder='enter a time (1min or 1hr)'
-                    helperText={'eg:3min,90min'}
+                    placeholder='enter a time (1min)'
+                    onBlur={handleBlur}
+                    inputProps={{maxLength:6}}
+                    error={errors.examTimeError}
+                    helperText={(errors.examTimeError && validation.errorText("Invalid Exam Time.E.g-1min"))}
                   />
                 </Grid>
                 <Grid item xs={12} >
@@ -502,9 +547,12 @@ function ExamModule() {
                     name="totalQuestion"
                     value={selectedExam.totalQuestion}
                     onChange={handleExamChange}
+                    inputProps={{maxLength:3}}
                     size='small'
                     placeholder='enter a count of questions'
-                    helperText={'eg:20,30,50'}
+                    onBlur={handleBlur}
+                    error={errors.totalQuestionError}
+                    helperText={(errors.totalQuestionError && validation.errorText("Invalid Questions Count"))}
                   />
                 </Grid>
                 {/* <Grid item xs={12}>

@@ -23,6 +23,7 @@ import { urls } from '../../../utils/constant';
 import { voucherActions } from '../voucherSliceReducer';
 import SelectExam from '../../exam/container/SelectExam';
 import logoimg from '../../../asset/img/Hematite Logo.jpg'
+import * as validation from '../../../utils/constant';
 
 function VoucherValidation() {
     const [Vcode, setVcode] = useState("");
@@ -40,7 +41,9 @@ function VoucherValidation() {
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
     const currentYear = new Date().getFullYear();
     const copyrightText = `© 2017-${currentYear} Hematite Infotech, All Rights Reserved.`;
-
+    const [errors, setErrors] = useState({
+        voucherError: false
+    })
     useEffect(() => {
         Get(urls.voucher).then(response => dispatch(voucherActions.GET_VOUCHER(response.data)))
             .catch((error) => {
@@ -59,6 +62,16 @@ function VoucherValidation() {
         setShowAlert(true);
     };
 
+    const handleBlur = (event) => {
+        const { name, value } = event.target;
+        if (name === 'Vcode') {
+            const isVoucherError = !validation.isValidVoucher(value);
+            setErrors((prevErrors) => ({
+                ...prevErrors,
+                voucherError: isVoucherError,
+            }));
+        }
+    }
     const submitBtn = (e) => {
         e.preventDefault();
 
@@ -97,7 +110,7 @@ function VoucherValidation() {
                     <Button sx={{ marginLeft: '15px' }} onClick={handleLogout} size='small' variant='outlined' color="inherit" >
                         Logout
                     </Button>
-                    
+
                 </Toolbar>
             </AppBar>
             {isValid ? (
@@ -131,9 +144,13 @@ function VoucherValidation() {
                                     id="code"
                                     label="Enter Voucher code"
                                     name="Vcode"
+                                    inputProps={{ maxLength: 6 }}
                                     autoFocus
                                     size='small'
+                                    onBlur={handleBlur}
                                     onChange={inputChangeHandler}
+                                    error={errors.voucherError}
+                                    helperText={(errors.voucherError && validation.errorText("Invalid Voucher"))}
                                 />
                                 <Button
                                     type="submit"
