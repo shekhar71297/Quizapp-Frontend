@@ -51,6 +51,7 @@ const RegistrationForm = () => {
   });
   const [selectedBranch, setSelectedBranch] = useState('');
 
+  console.log('selectedBranch', selectedBranch);
 
   const [errors, setErrors] = useState({
     fnameError: false,
@@ -104,6 +105,17 @@ const RegistrationForm = () => {
       setShowLogin(true)
     }
   }, [])
+  useEffect(() => {
+    if (allBranch && allBranch.length === 1) {
+      setSelectedBranch(allBranch[0].branchName);
+      const selectedBranchObject = allBranch.find(branch => branch.branchName === selectedBranch);
+      const branchId = selectedBranchObject ? selectedBranchObject.id : ''; // Get the branch id from the selected branch object
+      setFormData({
+        ...formData,
+        branch_id: branchId, // Update branch_id in formData
+      });
+    }
+  }, [allBranch]);
 
 
   const handleChange = (event) => {
@@ -428,11 +440,11 @@ const RegistrationForm = () => {
               size='small'
               sx={{
                 color: '#FFFFFF',
-                marginTop:'3px',
+                marginTop: '3px',
                 '&:hover': {
                   color: 'primary.main',
                   backgroundColor: '#FFFFFF', // Specify same color for hover state
-                 
+
                 }
               }}
             >
@@ -451,7 +463,7 @@ const RegistrationForm = () => {
               size='small'
               sx={{
                 color: '#FFFFFF',
-                marginTop:'3px',
+                marginTop: '3px',
                 '&:hover': {
                   color: 'primary.main',
                   backgroundColor: '#FFFFFF', // Specify same color for hover state
@@ -704,7 +716,6 @@ const RegistrationForm = () => {
                       <FormControlLabel value="cdac" control={<Radio />} label="CDAC" />
                       <FormControlLabel value="otherbranch" control={<Radio />} label="Other" />
                     </RadioGroup>
-
                     {branch === 'Branch' && (allBranch && allBranch.length > 1 ? (
                       <FormControl fullWidth size='small'>
                         <InputLabel sx={{ fontSize: isSmallScreen ? '12px' : '16px' }} id="demo-simple-select-autowidth-label">
@@ -723,7 +734,7 @@ const RegistrationForm = () => {
                           color='primary'
                         >
                           <MenuItem value='' aria-label='Choose branch'>Select Branch</MenuItem>
-                          {allBranch && allBranch.map((val, index) => (
+                          {allBranch.map((val) => (
                             <MenuItem key={val.id} value={val.id}>{capitalizeFirstLetter(val.branchName)}</MenuItem>
                           ))}
                         </Select>
@@ -732,7 +743,7 @@ const RegistrationForm = () => {
                       <TextField
                         fullWidth
                         size='small'
-                        value={allBranch && allBranch[0] ? allBranch[0].branchName : ''}
+                        value={selectedBranch || (allBranch[0] ? allBranch[0].branchName : '')}
                         name='selectedBranch'
                         label="Branch"
                         InputProps={{
@@ -740,6 +751,8 @@ const RegistrationForm = () => {
                         }}
                       />
                     ))}
+
+
 
                     {branch === 'cdac' && (
                       <TextField
@@ -797,7 +810,7 @@ const RegistrationForm = () => {
                     </RadioGroup>
                   </FormControl>
 
-                  
+
                   <Stack spacing={2} direction="row" sx={{ marginTop: '8px', display: 'flex', flexDirection: 'row' }}>
                     <Button variant="contained" color="primary" type="submit" size='small' disabled={isSubmitDisabled}>Submit</Button>
                     <Button type="button" size='small' onClick={() => resetFormHandler()} variant="contained" color="primary">Clear</Button>

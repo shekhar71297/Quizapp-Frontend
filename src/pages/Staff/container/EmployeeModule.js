@@ -176,6 +176,9 @@ const EmployeeModule = () => {
         setErrors(prevErrors => ({ ...prevErrors, emailError: isEmailError }));
         break;
       case "employeeId":
+        const isEmpIdError = !(validation.isValidEmpId(value));
+        setErrors(prevErrors => ({ ...prevErrors, employeeIdError: isEmpIdError }));
+        
         if (name === 'employeeId') {
           if (!Number.isInteger(Number(value))) {
             setErrors(prevErrors => ({ ...prevErrors, employeeIdError: true, }));
@@ -480,8 +483,8 @@ const EmployeeModule = () => {
               <Grid container spacing={2} sx={{ marginTop: 3 }}>
                 <Grid item xs={12} >
                   <TextField
-                    required
-                    label="First Name"
+                    // required
+                    label={<span>First Name<span style={{ color: 'red' }}>*</span></span>}
                     variant="outlined"
                     fullWidth
                     name="fname"
@@ -495,10 +498,10 @@ const EmployeeModule = () => {
                     helperText={errors.fnameError && validation.errorText("Invalid First Name")}
                   />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid item xs={12} sx={{ marginTop: 2 }}>
                   <TextField
-                    required
-                    label="Last Name"
+                    // required
+                    label={<span>Last Name<span style={{ color: 'red' }}>*</span></span>}
                     variant="outlined"
                     type="text"
                     fullWidth
@@ -512,10 +515,10 @@ const EmployeeModule = () => {
                     helperText={errors.lnameError && validation.errorText("Invalid Last Name") }
                   />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid item xs={12} sx={{ marginTop: 2 }}>
                   <TextField
-                    required
-                    label="Email"
+                    // required
+                    label={<span>Email<span style={{ color: 'red' }}>*</span></span>}
                     variant="outlined"
                     fullWidth
                     type='email'
@@ -530,10 +533,10 @@ const EmployeeModule = () => {
                   />
                 </Grid>
 
-                <Grid item xs={12}>
+                <Grid item xs={12} sx={{ marginTop: 2 }}>
                   <TextField
-                    required
-                    label="Contact"
+                    // required
+                    label={<span>Contact<span style={{ color: 'red' }}>*</span></span>}
                     variant="outlined"
                     fullWidth
                     type="tel"
@@ -551,9 +554,9 @@ const EmployeeModule = () => {
                   <TextField
                     select
                     margin="normal"
-                    required
+                    // required
                     fullWidth
-                    label="Role"
+                    label={<span>Role<span style={{ color: 'red' }}>*</span></span>}
                     name="role"
                     size='small'
                     id="role"
@@ -567,7 +570,7 @@ const EmployeeModule = () => {
                   </TextField>
                 </Grid>
                 <Grid item xs={12}>
-                  <InputLabel sx={{ ml: 1 }}>DOB</InputLabel>
+                  <InputLabel sx={{ ml: 1 }}>DOB<span style={{ color: 'red' }}>*</span></InputLabel>
                   <TextField
                     required
                     variant="outlined"
@@ -579,16 +582,17 @@ const EmployeeModule = () => {
                     onChange={handleChange}
                   />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid item xs={12} >
                   <TextField
-                    required
-                    label="employeeId"
+                    // required
+                    label={<span>Employee Id<span style={{ color: 'red' }}>*</span></span>}
                     variant="outlined"
                     fullWidth
                     name="employeeId"
                     value={employeeId}
                     inputProps={{maxLength:3}}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     helperText={(errors.employeeIdError && validation.errorText('Invalid Employee Id'))}
                     error={errors.employeeIdError}
                   />

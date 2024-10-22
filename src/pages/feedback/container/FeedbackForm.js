@@ -47,9 +47,9 @@ const FeedbackForm = () => {
     questionError2: false,
     pnrNoError: false,
     otherBranchError: false,
-    questionError3:false,
-    questionError4:false,
-    questionError5:false,
+    questionError3: false,
+    questionError4: false,
+    questionError5: false,
   });
 
   // State to manage snackbar for displaying messages
@@ -63,6 +63,18 @@ const FeedbackForm = () => {
       console.error('Error fetching feedback:', error);
     })
   }, []);
+
+  useEffect(() => {
+    if (allBranch && allBranch.length === 1) {
+      setSelectedBranch(allBranch[0].branchName);
+      const selectedBranchObject = allBranch.find(branch => branch.branchName === selectedBranch);
+      const branchId = selectedBranchObject ? selectedBranchObject.id : ''; // Get the branch id from the selected branch object
+      setFormData({
+        ...formData,
+        branch_id: branchId, // Update branch_id in formData
+      });
+    }
+  }, [allBranch]);
 
   //----------------------------Function to handle changes in form fields----------------------//
   const handleChange = (event) => {
@@ -223,9 +235,9 @@ const FeedbackForm = () => {
       errors.emailError ||
       errors.contactError ||
       errors.questionError ||
-      errors.questionError2||
-      errors.answerError||
-      errors.otherBranchError||
+      errors.questionError2 ||
+      errors.answerError ||
+      errors.otherBranchError ||
       errors.pnrNoError
     ) {
       //--------------------Showing snackbar message for validation errors---------------------//
@@ -291,8 +303,8 @@ const FeedbackForm = () => {
 
   //--------------------------------------destructure state--------------------------------//
   const { name, email, contact, question1, question2, question3, question4, question5, branch, otherbranch, cidacPrn, datetime } = formData;
-  const isSubmitDisabled = !email || !contact || !question1 || !question2 || !question3 || !question4 || !question5 ||errors.contactError||errors.emailError
-  || errors.nameError || errors.otherBranchError || errors.pnrNoError|| errors.questionError|| errors.questionError2
+  const isSubmitDisabled = !email || !contact || !question1 || !question2 || !question3 || !question4 || !question5 || errors.contactError || errors.emailError
+    || errors.nameError || errors.otherBranchError || errors.pnrNoError || errors.questionError || errors.questionError2
   // Rendering the form UI
   return (
     <Grid container justifyContent="center" alignItems="center" style={{ minHeight: '120vh', fontSize: '45px' }}>
@@ -312,7 +324,7 @@ const FeedbackForm = () => {
                   variant="outlined"
                   size="small"
                   inputProps={{ maxLength: 40 }}
-             
+
                   error={errors.nameError}
                   helperText={errors.nameError && validation.errorText("Invalid fullname")}
                 />
@@ -344,7 +356,7 @@ const FeedbackForm = () => {
                   variant="outlined"
                   size="small"
                   inputProps={{ maxLength: 10 }}
-                  
+
                   sx={{ mb: 1 }}
                   error={errors.contactError}
                   helperText={errors.contactError && validation.errorText("Invalid contact")}
@@ -392,7 +404,7 @@ const FeedbackForm = () => {
                       <TextField
                         fullWidth
                         size='small'
-                        value={allBranch && allBranch[0] ? allBranch[0].branchName : ''}
+                        value={selectedBranch || (allBranch[0] ? allBranch[0].branchName : '')}
                         name='selectedBranch'
                         label="Branch"
                         InputProps={{
@@ -480,12 +492,12 @@ const FeedbackForm = () => {
                   value={question3}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  inputProps={{maxLength:500}}
+                  inputProps={{ maxLength: 500 }}
                   variant="outlined"
                   size="small"
                   required
-                  multiline        
-                  rows={4} 
+                  multiline
+                  rows={4}
                   error={errors.questionError3}
                   helperText={errors.questionError3 && validation.errorText("Invalid answer,Max:500 characters")}
                 />
@@ -502,7 +514,7 @@ const FeedbackForm = () => {
                   variant="outlined"
                   size="small"
                   required
-                  multiline        
+                  multiline
                   rows={4}
                   error={errors.questionError4}
                   helperText={errors.questionError4 && validation.errorText("Invalid answer,Max:500 characters")}
@@ -520,7 +532,7 @@ const FeedbackForm = () => {
                   variant="outlined"
                   size="small"
                   required
-                  multiline        
+                  multiline
                   rows={4}
                   error={errors.questionError5}
                   helperText={errors.questionError5 && validation.errorText("Invalid answer,Max:500 characters")}
