@@ -358,9 +358,16 @@ const StartExam = () => {
 
     Post(urls.submit_exam, req)
       .then((response) => {
-        dispatch(resultActions.addResult(response.data));
+        if (response?.status === 200 || response?.status === 201) {
+          dispatch(resultActions.addResult(response.data));
+        }
+
       })
-      .catch((error) => console.log("question error: ", error));
+      .catch((error) => {
+        setAlertSeverity('error'); // or 'info', 'error', etc. based on your needs
+        setAlertMessage(error?.message);
+        setShowAlert(true);
+      });
 
     if (!examSubmitted) {
       setExamSubmitted(true);

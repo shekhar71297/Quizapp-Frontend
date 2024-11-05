@@ -78,6 +78,7 @@ const QuestionModule = () => {
   const { allExam } = useSelector((store) => store.exam);
   const [selectedFile, setSelectedFile] = useState(null);
   const [successSnackbarOpen, setSuccessSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('')
   const [csvData, setCsvData] = useState([]);
   const [examName, setExamName] = useState('');
   const theme = useTheme();
@@ -235,7 +236,11 @@ const QuestionModule = () => {
 
     Post(urls.question, formData)
       .then((response) => {
-        dispatch(questionActions.addQuestion(response.data));
+        if (response?.status === 200 || response?.status === 201) {
+          setSuccessSnackbarOpen(true)
+          setSnackbarMessage('Question added !')
+          dispatch(questionActions.addQuestion(response.data));
+        }
 
         // Reset form field values
         setFormValues({
@@ -252,7 +257,11 @@ const QuestionModule = () => {
         });
         handleClose();
       })
-      .catch((error) => console.log("question error: ", error));
+      .catch((error) => {
+        setErrorSnackbarOpen(true)
+        setErrorMessage(error?.message)
+      });
+
 
   };
 
@@ -290,8 +299,20 @@ const QuestionModule = () => {
 
   const handleDelete = (questionId) => {
     Delete(`${urls.question}${questionId}`)
-      .then(response => dispatch(questionActions.deleteQuestion(questionId)))
-      .catch(error => console.log("question error: ", error));
+      .then((response) => {
+        if (response?.status === 200 || response?.status === 201) {
+          setSuccessSnackbarOpen(true)
+          setSnackbarMessage('Question Deleted !')
+          dispatch(questionActions.deleteQuestion(questionId))
+        }
+      }
+
+      )
+
+      .catch((error) => {
+        setErrorSnackbarOpen(true)
+        setErrorMessage(error?.message)
+      });
   };
 
   const handleEdit = (question) => {
@@ -331,8 +352,12 @@ const QuestionModule = () => {
     // Make the API call to update the question
     Put(`${urls.question}${editingQuestion.id}/`, formData)
       .then((response) => {
-        // Dispatch action to update the question in the Redux store
-        dispatch(questionActions.updateQuestion(response.data));
+        if (response?.status === 200 || response.status === 201) {
+          setSuccessSnackbarOpen(true)
+          setSnackbarMessage('Question Updated !')
+          // Dispatch action to update the question in the Redux store
+          dispatch(questionActions.updateQuestion(response.data));  
+        }
 
         // Reset form field values
         setFormValues({
@@ -349,7 +374,10 @@ const QuestionModule = () => {
         });
         handleClose();
       })
-      .catch((error) => console.log("edit question error: ", error));
+      .catch((error) => {
+        setErrorSnackbarOpen(true)
+        setErrorMessage(error?.message)
+      });
 
   };
   // -------------------------------File upload------------------------------//
@@ -366,14 +394,16 @@ const QuestionModule = () => {
 
     Post(urls.upload_csv, formData)
       .then((response) => {
-        setSuccessSnackbarOpen(true);
-        dispatch(questionActions.addCsvFile(response.data));
-        console.log('select', selectedFile);
+        if(response?.status === 200 || response?.status===201){
+          setSuccessSnackbarOpen(true);
+          setSnackbarMessage('File uploaded !')
+          dispatch(questionActions.addCsvFile(response.data));
+        }
       })
       .catch((error) => {
         console.error(error); // Log error for debugging or display an error message to the user
         setErrorSnackbarOpen(true); // Open the error snackbar
-        setErrorMessage('An error occurred while uploading the file.');
+        setErrorMessage(error?.message);
       });
   };
 
@@ -428,7 +458,7 @@ const QuestionModule = () => {
 
       <Snackbar open={successSnackbarOpen} anchorOrigin={{ vertical: 'top', horizontal: 'center' }} autoHideDuration={3000} onClose={handleSuccessSnackbarClose}>
         <Alert onClose={handleSuccessSnackbarClose} severity="success">
-          File uploaded successfully.
+          {snackbarMessage}
         </Alert>
       </Snackbar>
       <Card sx={{ marginRight: "25px", marginTop: 7, position: "relative", right: 20, borderRadius: '0px' }}>
@@ -522,7 +552,7 @@ const QuestionModule = () => {
                       style={{ backgroundColor: 'white', width: isSmallScreen ? '130px' : '200px', height: isSmallScreen ? '30px' : "40px" }}
                       label="Select Exam"
                     >
-                      <MenuItem  aria-readonly sx={{ width: isSmallScreen ? '130px' : '200px', height: isSmallScreen ? '30px' : "40px", justifyContent: 'center' }} >None</MenuItem>
+                      <MenuItem aria-readonly sx={{ width: isSmallScreen ? '130px' : '200px', height: isSmallScreen ? '30px' : "40px", justifyContent: 'center' }} >None</MenuItem>
                       {allExam.map((exam) => (
                         <MenuItem key={exam.id} value={exam.id} sx={{ width: isSmallScreen ? '130px' : '200px', height: isSmallScreen ? '30px' : "40px", justifyContent: 'center' }}  >
                           {capitalizeFirstLetter(exam.examName)}
@@ -619,7 +649,7 @@ const QuestionModule = () => {
                       name='marks'
                       onChange={(e) => handleOptionChange('marks', e.target.value)}
                       onBlur={handleBlur}
-                      inputProps={{maxLength:2}}
+                      inputProps={{ maxLength: 2 }}
                       error={errors.marksError}
                       helperText={(errors.marksError && validation.errorText("Invalid marks.E.g-1,10"))}
                     />

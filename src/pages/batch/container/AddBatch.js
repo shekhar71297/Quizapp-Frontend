@@ -63,7 +63,7 @@ const AddBatch = () => {
 		contactError: false,
 		emailError: false,
 		employeeIdError: false,
-		batchNameError:false
+		batchNameError: false
 	});
 	const [severity, setSeverity] = useState("success");
 	const nav = useNavigate()
@@ -137,16 +137,16 @@ const AddBatch = () => {
 		setPage(0);
 	};
 	const handleBlur = (event) => {
-    const { name, value } = event.target;
+		const { name, value } = event.target;
 
-    if (name === 'batchname') { 
-      const isBatchNameError = !validation.isValidBatchName(value);
-      setErrors((prevErrors) => ({
-        ...prevErrors,
-        batchNameError: isBatchNameError,
+		if (name === 'batchname') {
+			const isBatchNameError = !validation.isValidBatchName(value);
+			setErrors((prevErrors) => ({
+				...prevErrors,
+				batchNameError: isBatchNameError,
 
-      }));
-    }
+			}));
+		}
 	}
 	// Handle input change
 	const handleChange = (event) => {
@@ -268,13 +268,22 @@ const AddBatch = () => {
 
 		const id = recordToDeleteId;
 		Delete(`${urls.batch}${id}`)
-			.then(response => dispatch(batchActions.DELETE_BATCH(id)))
-			.catch(error => console.log("batch error: ", error));
+			.then(response => {
+				if (response?.status === 200 || response?.status === 201) {
+					setSnackbarOpen(true);
+					setSnackbarMessage('batch deleted successfully');
+					setSeverity('success');
+					dispatch(batchActions.DELETE_BATCH(id))
+				}
+			})
+			.catch(error => {
+				setSnackbarOpen(true);
+				setSnackbarMessage(error.message);
+				setSeverity('error');
+			});
 
 		closeConfirmDialog();
-		setSnackbarOpen(true);
-		setSnackbarMessage('batch deleted successfully');
-		setSeverity('error');
+
 	};
 	// Delete data handler
 	const deletedata = (id) => {
@@ -323,25 +332,41 @@ const AddBatch = () => {
 			// addEmployeeRequest(empObj);
 			Post(urls.batch, batchObj)
 				.then(response => {
-					dispatch(batchActions.ADD_BATCH(response.data));
-					const reverseEmp = [response.data].reverse();
-					const updateBatches = [...reverseEmp, ...allBatches];
-					dispatch(batchActions.GET_BATCH(updateBatches));
+					if (response?.status === 200 || response?.status === 201) {
+						setSnackbarOpen(true);
+						setSnackbarMessage('Batch Added!.');
+						setSeverity("success");
+						dispatch(batchActions.ADD_BATCH(response.data));
+						const reverseEmp = [response.data].reverse();
+						const updateBatches = [...reverseEmp, ...allBatches];
+						dispatch(batchActions.GET_BATCH(updateBatches));
+					}
 				})
-				.catch(error => console.log("batch error: ", error));
-			setSnackbarOpen(true);
-			setSnackbarMessage('Batch Added!.');
-			setSeverity("success");
+				.catch(error => {
+					setSnackbarOpen(true);
+					setSnackbarMessage(error?.message);
+					setSeverity("error");
+				});
+
 
 		} else {
 			// Update existing employee
 			batchObj['id'] = id;
 			Put(`${urls.batch}${batchObj.id}/`, batchObj)
-				.then(response => dispatch(batchActions.UPDATE_BATCH(response.data)))
-				.catch(error => console.log("batch error: ", error));
-			setSnackbarOpen(true);
-			setSnackbarMessage('Batch Updated!.');
-			setSeverity("success");
+				.then(response => {
+					if (response?.status === 200 || response?.status === 201) {
+						setSnackbarOpen(true);
+						setSnackbarMessage('Batch Updated!.');
+						setSeverity("success");
+						dispatch(batchActions.UPDATE_BATCH(response.data))
+					}
+				})
+				.catch(error => {
+					setSnackbarOpen(true);
+					setSnackbarMessage(error.message);
+					setSeverity("error");
+				});
+
 		}
 
 		handleClose();
@@ -499,12 +524,12 @@ const AddBatch = () => {
 										name="batchname"
 										size='small'
 										type="text"
-										inputProps={{maxLength:30}}
+										inputProps={{ maxLength: 30 }}
 										onBlur={handleBlur}
 										value={batchname}
 										onChange={handleChange}
 										error={errors.batchNameError}
-                    helperText={(errors.batchNameError && validation.errorText("Invalid Batch Name."))}
+										helperText={(errors.batchNameError && validation.errorText("Invalid Batch Name."))}
 									/>
 								</Grid>
 								<Grid item xs={12} md={6}>
@@ -576,7 +601,7 @@ const AddBatch = () => {
 										fullWidth
 										required
 										size='small'
-										inputProps={{maxLength:3}}
+										inputProps={{ maxLength: 3 }}
 									/>
 								</Grid>
 								<Grid item xs={12} md={6}>

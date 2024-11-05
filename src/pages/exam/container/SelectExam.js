@@ -66,7 +66,7 @@ function SelectExam() {
       openSnackbar('Please select an exam before proceeding.');
     }
   };
-
+const isSubmitDisable = !examId
   return (
     <div>
       <Snackbar open={snackbarOpen} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
@@ -117,6 +117,7 @@ function SelectExam() {
                 variant="contained"
                 sx={{ mt: 3, mb: 2 }}
                 onClick={submitBtn}
+                disabled={isSubmitDisable}
               >
                 submit
               </Button>

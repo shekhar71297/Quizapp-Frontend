@@ -65,6 +65,10 @@ const FeedbackForm = () => {
   }, []);
 
   useEffect(() => {
+
+  }, [])
+
+  useEffect(() => {
     if (allBranch && allBranch.length === 1) {
       setSelectedBranch(allBranch[0].branchName);
       const selectedBranchObject = allBranch.find(branch => branch.branchName === selectedBranch);
@@ -75,7 +79,16 @@ const FeedbackForm = () => {
       });
     }
   }, [allBranch]);
-
+  // A separate effect to update formData after selectedBranch is set
+  useEffect(() => {
+    const selectedBranchObject = allBranch?.find(branch => branch.branchName === selectedBranch);
+    if (selectedBranchObject) {
+      setFormData(prevFormData => ({
+        ...prevFormData,
+        branch_id: selectedBranchObject.id,
+      }));
+    }
+  }, [selectedBranch, allBranch]);
   //----------------------------Function to handle changes in form fields----------------------//
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -101,7 +114,13 @@ const FeedbackForm = () => {
         otherbranch: '',
         organization: 'Hematite branch'
       }));
+      setErrors({
+        ...errors,
+        otherBranchError: false,
+        pnrNoError: false
+      })
     }
+
     if (name === 'branch') {
       const selectedBranchObject = allBranch.find(branchObj => branchObj.branchName === value);
       if (selectedBranchObject) {
@@ -238,7 +257,10 @@ const FeedbackForm = () => {
       errors.questionError2 ||
       errors.answerError ||
       errors.otherBranchError ||
-      errors.pnrNoError
+      errors.pnrNoError ||
+      errors.questionError3 ||
+      errors.questionError4 ||
+      errors.questionError5
     ) {
       //--------------------Showing snackbar message for validation errors---------------------//
       setSnackbarOpen(true);
@@ -261,10 +283,20 @@ const FeedbackForm = () => {
     }
 
     Post(urls.feedback, formData).then(response => {
-      dispatch(feedbackActions.postFeedback(response.data))
+      if (response?.status === 201 || response?.status === 200) {
+        setSnackbarOpen(true);
+        setSeverity('success');
+        setSnackbarMessage('Thank you! Your feedback has been submitted.');
+        dispatch(feedbackActions.postFeedback(response.data))
+        setTimeout(() => {
+          navigate('/')
+        }, 2000);
 
+      }
     }).catch((error) => {
-      console.log(error)
+      setSnackbarOpen(true);
+      setSeverity('error');
+      setSnackbarMessage(error?.message);
     })
 
     //------------------------------after submting clear the form----------------------------//
@@ -285,12 +317,7 @@ const FeedbackForm = () => {
       branch_id: ''
     });
 
-    setSnackbarOpen(true);
-    setSeverity('success');
-    setSnackbarMessage('Thank you! Your feedback has been submitted.');
-    setTimeout(() => {
-      navigate('/')
-    }, 2000);
+
 
   };
   const handleCloseSnackbar = () => {
@@ -304,7 +331,7 @@ const FeedbackForm = () => {
   //--------------------------------------destructure state--------------------------------//
   const { name, email, contact, question1, question2, question3, question4, question5, branch, otherbranch, cidacPrn, datetime } = formData;
   const isSubmitDisabled = !email || !contact || !question1 || !question2 || !question3 || !question4 || !question5 || errors.contactError || errors.emailError
-    || errors.nameError || errors.otherBranchError || errors.pnrNoError || errors.questionError || errors.questionError2
+    || errors.nameError || errors.otherBranchError || errors.pnrNoError || errors.questionError || errors.questionError2 || errors.questionError3 || errors.questionError4 || errors.questionError5
   // Rendering the form UI
   return (
     <Grid container justifyContent="center" alignItems="center" style={{ minHeight: '120vh', fontSize: '45px' }}>

@@ -30,7 +30,9 @@ export const isValidFullName = (name) => /^[a-zA-Z ]{2,40}$/.test(name);
 export const isValidQue = (que) => /^[a-zA-Z0-9., ]{5,500}$/.test(que);
 export const isValidName = (name) => /^[a-zA-Z]{2,20}$/.test(name);
 export const isValidContact = (contact) => /^[6789]\d{9}$/.test(contact);
-export const isValidEmail = (email) => /^[a-zA-Z0-9._%+-]+@(gmail|yahoo|orkut|rediff|corp|foundation|outlook|hotmail|live|hematitecorp)\.(com|org|in|corp|govt|net)$/mg.test(email);
+export const isValidEmail = (email) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z]{3,}\.[a-zA-Z]{2,}$/g.test(email);
+// export const isValidEmail = (email) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/mg.test(email);
+
 export const isValidPnr = (pnr) => /^[0-9]{16,20}$/.test(pnr);
 export const isValidPassword = (Password) => /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,14}$/.test(Password);
 export const isValidExamName = (name) => /^[a-zA-Z0-9\- ]{2,30}$/.test(name);

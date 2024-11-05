@@ -160,13 +160,16 @@ const ForgetPassword = () => {
     const url = `${urls.password}${foundUser.id}/`;
     Put(url, updatedUserData)
       .then(response => {
-        setSnackbarSeverity('success');
-        setSnackbarMessage('Password reset!');
-        setIsSnackbarOpen(true);
+        if (response?.status === 200 || response?.status === 201) {
+          setSnackbarSeverity('success');
+          setSnackbarMessage('Password reset!');
+          setIsSnackbarOpen(true);
+        }
+
       })
       .catch(error => {
         setSnackbarSeverity('error');
-        setSnackbarMessage('Failed to reset password!');
+        setSnackbarMessage(error?.message);
         setIsSnackbarOpen(true);
       });
 
@@ -184,7 +187,7 @@ const ForgetPassword = () => {
   const togglePassword2Visibility = () => {
     setPassword2Visibility((prevState) => !prevState);
   };
-  const isSubmitDisabled = !email ||  !password || errors.emailError || errors.password2Error || errors.matchPasswordError ||!password2
+  const isSubmitDisabled = !email || !password || errors.emailError || errors.password2Error || errors.matchPasswordError || !password2
   return (
     <>
 
@@ -254,7 +257,7 @@ const ForgetPassword = () => {
                   onBlur={handleBlur}
                   error={errors.passwordError}
                   inputProps={{ maxLength: 14 }}
-                  helperText={( errors.passwordError && validation.errorText("Invalid password") )}
+                  helperText={(errors.passwordError && validation.errorText("Invalid password"))}
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position='end'>
@@ -305,8 +308,7 @@ const ForgetPassword = () => {
                       <li>One uppercase character</li>
                       <li>One number</li>
                       <li>One special character</li>
-                      <li>Password should be minimum 8 characters </li>
-                      <li>Password should be maximum 14 characters</li>
+                      <li>Your password must be between 8 and 14 characters long</li>
                     </ul>
                   </div>
                 )}

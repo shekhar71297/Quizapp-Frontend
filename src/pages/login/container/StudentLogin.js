@@ -59,15 +59,6 @@ export default function Login() {
       .catch((error) => console.log('user error: ', error));
   }, []);
 
-  useEffect(() => {
-    if (token && sessionStorage.getItem('accessToken')) {
-      if (sessionStorage.getItem('role') === 'student' || sessionStorage.getItem('role') === 'intern') {
-        nav('/quizapp');
-      } else if (sessionStorage.getItem('role') === 'admin') {
-        nav('/dashboard/student');
-      }
-    }
-  }, [token, nav]);
   //-------------------------------------handle submit------------------------------------//
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -82,30 +73,27 @@ export default function Login() {
       return;
     }
     const user = allUser.find((user) => user.email === loginData.email.toLowerCase());
-    if (!user) {
-      handleSnackbarOpen('Invalid email or password', 'error');
-      return;
-    }
+   
 
     // Login successful, save user details to session storage
-    const firstName = capitalizeFirstLetter(user.fname);
-    const lastName = capitalizeFirstLetter(user.lname);
+    const firstName = capitalizeFirstLetter(user?.fname);
+    const lastName = capitalizeFirstLetter(user?.lname);
     sessionStorage.setItem('user', firstName + ' ' + lastName);
-    sessionStorage.setItem('role', user.role);
-    sessionStorage.setItem('studentId', user.id)
+    sessionStorage.setItem('role', user?.role);
+    sessionStorage.setItem('studentId', user?.id)
 
 
     Post(`${urls.token}`, loginData)
       .then((response) => {
-        handleSnackbarOpen('Login successful', 'success');
         if (response?.access) {
-          setTimeout(() => {        
+          handleSnackbarOpen('Login successful', 'success'); 
+          setTimeout(() => {       
           sessionStorage.setItem('accessToken', response?.access);
           dispatch(loginActions.LOGIN_SUCCESS(response?.access));
           // Redirect based on user role
          
             if (user.role === 'student' || user.role === 'intern') {
-              nav('/voucher');
+              nav('/quizapp');
             } else if (user.role === 'trainer' || user.role === 'counsellor') {
               nav('/dashboard/exam');
             } else {
@@ -114,8 +102,8 @@ export default function Login() {
           }, 2000)
         }
       })
-      .catch((error) => {
-        handleSnackbarOpen('Error occurred during login', 'error');
+      .catch((error) => { 
+        handleSnackbarOpen(error?.response?.data?.detail, 'error');
       });
   };
 

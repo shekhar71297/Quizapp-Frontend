@@ -147,13 +147,22 @@ const Usertable = () => {
     // initUserRequest();
     // deleteUserRequest(id);
     Delete(`${urls.user}${id}`)
-      .then(response => dispatch(userActions.deleteUser(id)))
-      .catch(error => console.log("user error: ", error));
+      .then(response => {
+        if(response.status === 200 ||response.status === 201){
+          setSnackbarOpen(true);
+          setSnackbarMessage('User deleted successfully');
+          setSeverity('success');
+          dispatch(userActions.deleteUser(id))
+        }
+      })
+      .catch(error => {
+        setSnackbarOpen(true);
+        setSnackbarMessage(error.message);
+        setSeverity('error');
+      });
 
     closeConfirmDialog();
-    setSnackbarOpen(true);
-    setSnackbarMessage('User deleted successfully');
-    setSeverity('error');
+   
   };
 
   const deletedata = (id) => {
@@ -203,11 +212,22 @@ const Usertable = () => {
     uobj['id'] = id;
     // initUserRequest();
     // updateUserRequest(uobj);
-    Put(`${urls.user}${id}/`, uobj).then(response => dispatch(userActions.updateUser(response.data)))
-      .catch(error => console.log("user error: ", error));
-    setSnackbarOpen(true);
-    setSnackbarMessage('User updated successfully');
-    setSeverity("success");
+    Put(`${urls.user}${id}/`, uobj).then(response => {
+      if (response.status === 200 || response.status === 201) {
+        setSnackbarOpen(true);
+        setSnackbarMessage('User updated successfully');
+        setSeverity("success");
+        dispatch(userActions.updateUser(response.data))
+      }
+    })
+
+
+      .catch(error => {
+        setSnackbarOpen(true);
+        setSnackbarMessage(error.message);
+        setSeverity("error");
+      });
+
 
     handleClose();
     Get(`${urls.user}`)
@@ -330,14 +350,14 @@ const Usertable = () => {
             <Table aria-label="simple table">
               <TableHead >
                 <TableRow>
-                  <TableCell align="left"><Typography component="div" variant="subtitle1" sx={{ fontWeight: 'bold',fontSize:'15px' }}>Sr No</Typography></TableCell>
-                  <TableCell align="left"><Typography component="div" variant="subtitle1" sx={{ fontWeight: 'bold',fontSize:'15px' }}>Full Name</Typography></TableCell>
-                  <TableCell align="left"><Typography component="div" variant="subtitle1" sx={{ fontWeight: 'bold',fontSize:'15px' }}>Email</Typography></TableCell>
+                  <TableCell align="left"><Typography component="div" variant="subtitle1" sx={{ fontWeight: 'bold', fontSize: '15px' }}>Sr No</Typography></TableCell>
+                  <TableCell align="left"><Typography component="div" variant="subtitle1" sx={{ fontWeight: 'bold', fontSize: '15px' }}>Full Name</Typography></TableCell>
+                  <TableCell align="left"><Typography component="div" variant="subtitle1" sx={{ fontWeight: 'bold', fontSize: '15px' }}>Email</Typography></TableCell>
                   {/* <TableCell align="left"><Typography component="div" variant="subtitle1" sx={{ fontWeight: 'bold' }}>Role</Typography></TableCell> */}
                   {/* {<TableCell align="left"><Typography component="div" variant="subtitle1" sx={{ fontWeight: 'bold' }}>Gender</Typography></TableCell>} */}
-                  {<TableCell align="left"><Typography component="div" variant="subtitle1" sx={{ fontWeight: 'bold',fontSize:'15px' }}>Contact</Typography></TableCell>}
-                  {<TableCell align="left"><Typography component="div" variant="subtitle1" sx={{ fontWeight: 'bold',fontSize:'15px' }}>Organization</Typography></TableCell>}
-                  <TableCell align="center"><Typography component="div" variant="subtitle1" sx={{ fontWeight: 'bold',fontSize:'15px' }}>Action</Typography></TableCell>
+                  {<TableCell align="left"><Typography component="div" variant="subtitle1" sx={{ fontWeight: 'bold', fontSize: '15px' }}>Contact</Typography></TableCell>}
+                  {<TableCell align="left"><Typography component="div" variant="subtitle1" sx={{ fontWeight: 'bold', fontSize: '15px' }}>Organization</Typography></TableCell>}
+                  <TableCell align="center"><Typography component="div" variant="subtitle1" sx={{ fontWeight: 'bold', fontSize: '15px' }}>Action</Typography></TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -456,7 +476,7 @@ const Usertable = () => {
                     value={fname}
                     onChange={handleChange}
                     error={fnameError}
-                    helperText={(fnameError && validation.errorText("Please enter a valid first name")) || 'eg:John'}
+                    helperText={(fnameError && validation.errorText("Invalid First Name"))}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -470,7 +490,7 @@ const Usertable = () => {
                     value={lname}
                     onChange={handleChange}
                     error={lnameError}
-                    helperText={(lnameError && validation.errorText("Please enter a valid last name")) || 'eg: Dev'}
+                    helperText={(lnameError && validation.errorText("Invalid Last Name"))}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -484,7 +504,7 @@ const Usertable = () => {
                     value={email}
                     onChange={handleChange}
                     error={emailError}
-                    helperText={(emailError && validation.errorText("Please enter a valid Email")) || 'eg: John1@gmail.com'}
+                    helperText={(emailError && validation.errorText("Invalid Email"))}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -498,7 +518,7 @@ const Usertable = () => {
                     value={contact}
                     onChange={handleChange}
                     error={contactError}
-                    helperText={(contactError && validation.errorText("Please enter a valid contact")) || 'eg: 8888888888'}
+                    helperText={(contactError && validation.errorText("Invalid contact"))}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -508,7 +528,7 @@ const Usertable = () => {
                     variant="outlined"
                     fullWidth
                     name="role"
-                    value={role}
+                    value={capitalizeFirstLetter(role)}
                     onChange={handleChange}
                   />
                 </Grid>
@@ -611,7 +631,7 @@ const Usertable = () => {
                     </Typography>
                   ) : null}
 
-                
+
                 </Box>
               </Grid>
 

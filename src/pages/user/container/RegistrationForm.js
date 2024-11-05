@@ -51,8 +51,6 @@ const RegistrationForm = () => {
   });
   const [selectedBranch, setSelectedBranch] = useState('');
 
-  console.log('selectedBranch', selectedBranch);
-
   const [errors, setErrors] = useState({
     fnameError: false,
     lnameError: false,
@@ -107,15 +105,28 @@ const RegistrationForm = () => {
   }, [])
   useEffect(() => {
     if (allBranch && allBranch.length === 1) {
-      setSelectedBranch(allBranch[0].branchName);
-      const selectedBranchObject = allBranch.find(branch => branch.branchName === selectedBranch);
-      const branchId = selectedBranchObject ? selectedBranchObject.id : ''; // Get the branch id from the selected branch object
-      setFormData({
-        ...formData,
-        branch_id: branchId, // Update branch_id in formData
-      });
+      // Set the branch name and ID when there is only one branch
+      const singleBranch = allBranch[0];
+      setSelectedBranch(singleBranch.branchName);
+
+      setFormData(prevFormData => ({
+        ...prevFormData,
+        branch_id: singleBranch.id,
+      }));
     }
   }, [allBranch]);
+
+  // A separate effect to update formData after selectedBranch is set
+  useEffect(() => {
+    const selectedBranchObject = allBranch?.find(branch => branch.branchName === selectedBranch);
+    if (selectedBranchObject) {
+      setFormData(prevFormData => ({
+        ...prevFormData,
+        branch_id: selectedBranchObject.id,
+      }));
+    }
+  }, [selectedBranch, allBranch]);
+
 
 
   const handleChange = (event) => {
@@ -125,6 +136,8 @@ const RegistrationForm = () => {
       console.log(selectedBranch);
       const selectedBranchObject = allBranch.find(branch => branch.id === value);
       const branchId = selectedBranchObject ? selectedBranchObject.id : ''; // Get the branch id from the selected branch object
+      console.log(branchId);
+
       setFormData({
         ...formData,
         branch_id: branchId, // Update branch_id in formData
@@ -330,21 +343,30 @@ const RegistrationForm = () => {
       fname: formData.fname.toLowerCase(),
       lname: formData.lname.toLowerCase(),
     };
+    console.log(updatedFormData);
 
     // Dispatch add student action
     // addStudentRequest(formData);
     Post(urls.student, updatedFormData)
       .then(response => {
-        dispatch(userActions.addUser(response.data));
-        // Show success snackbar
-        setSnackbarOpen(true);
-        setSeverity('success');
-        setSnackbarMessage('Student Registered successfully');
+        console.log(response);
+        if (response?.status === 201) {
+          dispatch(userActions.addUser(response.data));
+          // Show success snackbar
+          setSnackbarOpen(true);
+          setSeverity('success');
+          setSnackbarMessage('Student Registered Successfully');
+        } else {
+          // Handle cases where status is not 201
+          setSnackbarOpen(true);
+          setSeverity('error');
+          setSnackbarMessage('Internal server error');
+        }
       })
       .catch(error => {
         setSnackbarOpen(true);
         setSeverity('error');
-        setSnackbarMessage("Registration Failed.")
+        setSnackbarMessage(error?.response?.statusText)
       });
 
     // Clear form data
@@ -668,8 +690,7 @@ const RegistrationForm = () => {
                         <li>One number</li>
                         <li>One special character</li>
                         <li>8 characters minimum</li>
-                        <li>Password should be minimum 8 characters </li>
-                        <li>Password should be maximum 14 characters</li>
+                        <li>Your password must be between 8 and 14 characters long</li>
                       </ul>
                     </div>
                   )}
@@ -743,7 +764,7 @@ const RegistrationForm = () => {
                       <TextField
                         fullWidth
                         size='small'
-                        value={selectedBranch || (allBranch[0] ? allBranch[0].branchName : '')}
+                        value={capitalizeFirstLetter(selectedBranch || (allBranch[0] ? allBranch[0].branchName : ''))}
                         name='selectedBranch'
                         label="Branch"
                         InputProps={{
@@ -766,7 +787,7 @@ const RegistrationForm = () => {
                         onBlur={handleBlur}
                         inputProps={{ maxLength: 20 }}
                         error={errors.pnrNoError}
-                        helperText={(errors.pnrNoError && validation.errorText("Please enter a valid prnNo"))}
+                        helperText={(errors.pnrNoError && validation.errorText("Invalid PRN-No"))}
                         fullWidth
                         size='small'
                       />
@@ -777,7 +798,7 @@ const RegistrationForm = () => {
                         id="otherbranch"
                         variant="outlined"
                         color="primary"
-                        label="Other branch"
+                        label="Other Branch"
                         name="otherbranch"
                         value={otherbranch}
                         inputProps={{ maxLength: 30 }}

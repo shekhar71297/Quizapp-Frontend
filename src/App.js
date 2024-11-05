@@ -35,12 +35,12 @@ const store = createStore();
 
 function App() {
 //convert https protocol to http
-  useEffect(() => {
-    if (window.location.protocol === "https:") {
-      const httpURL = window.location.href.replace("https://", "http://");
-      window.location.replace(httpURL);
-    }
-  }, []);
+useEffect(() => {
+  if (window.location.protocol === "https:") {
+    const httpURL = window.location.href.replace("https://", "http://");
+    window.location.replace(httpURL); // Redirect to the HTTP version
+  }
+}, []);
 
   const colortheme = createTheme({
     palette: {
