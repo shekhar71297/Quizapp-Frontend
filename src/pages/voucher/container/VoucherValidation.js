@@ -91,7 +91,7 @@ function VoucherValidation() {
         } else {
             setIsSnackbarOpen(true);
             setSnackbarSeverity('error');
-            setSnackbarMessage('Enter valid voucher');
+            setSnackbarMessage('Invalid voucher');
         }
 
     };

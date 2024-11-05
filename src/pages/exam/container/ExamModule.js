@@ -37,6 +37,7 @@ function ExamModule() {
   const [isAddExam, setIsAddExam] = useState(true);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [severity, setSnackbarSeverity] = useState('success');
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -189,15 +190,21 @@ function ExamModule() {
       // Send the updated exam data to the backend API
       Put(`${urls.exams}${examToUpdate.id}/`, updatedExam)
         .then((response) => {
-          // Dispatch the action to update the exam in the Redux store
-          dispatch(examActions.UPDATE_EXAM(response.data));
-
-          // Update the original list of exams with the new exam status
-          const updatedExams = [...exams];
-          updatedExams[originalIndex] = response.data;
-          setExams(updatedExams);
+          if (response?.status === 200 || response?.status === 201) {
+            // Dispatch the action to update the exam in the Redux store
+            dispatch(examActions.UPDATE_EXAM(response.data));
+            // Update the original list of exams with the new exam status
+            const updatedExams = [...exams];
+            updatedExams[originalIndex] = response.data;
+            setExams(updatedExams);
+          }
         })
-        .catch((error) => console.log("Exam error: ", error));
+        .catch((error) => {
+          setSnackbarOpen(true);
+          setSnackbarMessage(error?.message);
+          setSnackbarSeverity('error')
+
+        });
     }
   };
   const toggelResultChange = (index, newshowResult) => {
@@ -217,15 +224,22 @@ function ExamModule() {
       // Send the updated exam data to the backend API
       Put(`${urls.exams}${examToUpdate.id}/`, updatedExam)
         .then((response) => {
-          // Dispatch the action to update the exam in the Redux store
-          dispatch(examActions.UPDATE_EXAM(response.data));
+          if (response?.status === 200 || response?.status === 201) {
+            // Dispatch the action to update the exam in the Redux store
+            dispatch(examActions.UPDATE_EXAM(response.data));
 
-          // Update the original list of exams with the new exam status
-          const updatedExams = [...exams];
-          updatedExams[originalIndex] = response.data;
-          setExams(updatedExams);
+            // Update the original list of exams with the new exam status
+            const updatedExams = [...exams];
+            updatedExams[originalIndex] = response.data;
+            setExams(updatedExams);
+          }
+
         })
-        .catch((error) => console.log("Exam error: ", error));
+        .catch((error) => {
+          setSnackbarOpen(true);
+          setSnackbarMessage(error?.message)
+          setSnackbarSeverity('error')
+        });
     }
   };
 
@@ -250,21 +264,28 @@ function ExamModule() {
 
   const handleDeleteConfirmed = () => {
     Delete(`${urls.exams}${deletingRecordId}`)
-      .then(response => dispatch(examActions.DELETE_EXAM(deletingRecordId)))
-      .catch(error => console.log("Exam error: ", error));
+      .then(response => {
+        if (response?.status === 200 || response?.status === 201) {
+          setSnackbarOpen(true);
+          setSnackbarMessage('Exam Deleted!.');
+          setSnackbarSeverity('success')
+          dispatch(examActions.DELETE_EXAM(deletingRecordId))
+        }
+      })
+      .catch(error => {
+        setSnackbarOpen(true);
+        setSnackbarMessage(error?.message);
+        setSnackbarSeverity('error')
+      });
 
     closeDeletePopup();
-    setSnackbarOpen(true);
-    setSnackbarMessage('Exam Deleted!.');
+
     // initExamRequest()
   };
 
   //--------------------- for add-update onchange method------------------------//
   const updateExam = (event) => {
     event.preventDefault();
-
-
-
     const { id = null, examName, examTime, examStatus, totalQuestion, showResult } = selectedExam;
     const updatedExam = {
       id,
@@ -290,28 +311,47 @@ function ExamModule() {
 
       Post(urls.exams, AddExam)
         .then(response => {
-          dispatch(examActions.ADD_EXAM(response.data))
-          const reverseExam = [response.data].reverse()
-          const reversedExam = [...reverseExam, ...allExam]
-          dispatch(examActions.GET_EXAM(reversedExam))
+          if (response?.status === 200 || response?.status === 201) {
+            setSnackbarOpen(true);
+            setSnackbarMessage('Exam Added!.');
+            setSnackbarSeverity('success')
+            dispatch(examActions.ADD_EXAM(response.data))
+            const reverseExam = [response.data].reverse()
+            const reversedExam = [...reverseExam, ...allExam]
+            dispatch(examActions.GET_EXAM(reversedExam))
+          }
         })
-        .catch(error => console.log("Exam error: ", error));
-      setSnackbarOpen(true);
-      setSnackbarMessage('Exam Added!.');
+        .catch(error => {
+          setSnackbarOpen(true);
+          setSnackbarMessage(error?.message);
+          setSnackbarSeverity('error')
+        });
+
 
 
     } else {
       if (isUpdateDuplicate) {
         setSnackbarOpen(true);
         setSnackbarMessage('An exam with the same name already exists.');
+        setSnackbarSeverity('error')
       } else {
 
         Put(`${urls.exams}${id}/`, updatedExam)
-          .then(response => dispatch(examActions.UPDATE_EXAM(response.data)))
-          .catch(error => console.log("Exam error: ", error));
+          .then(response => {
+            if (response?.status === 200 || response?.status === 201) {
+              setSnackbarOpen(true);
+              setSnackbarMessage('Exam Updated!.');
+              setSnackbarSeverity('success')
+              dispatch(examActions.UPDATE_EXAM(response.data))
+            }
+          })
+          .catch(error => {
+            setSnackbarOpen(true);
+            setSnackbarMessage(error?.message);
+            setSnackbarSeverity('error')
+          });
 
-        setSnackbarOpen(true);
-        setSnackbarMessage('Exam Updated!.');
+
       }
     }
 
@@ -600,7 +640,7 @@ function ExamModule() {
           onClose={closeSnackbar}
           anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
         >
-          <MuiAlert onClose={closeSnackbar} severity="success" variant="filled" sx={{ width: '100%' }}>
+          <MuiAlert onClose={closeSnackbar} severity={severity} variant="filled" sx={{ width: '100%' }}>
             {snackbarMessage}
           </MuiAlert>
         </Snackbar>

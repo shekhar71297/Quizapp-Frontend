@@ -154,12 +154,12 @@ function BatchDetails({ selectedBatch, updateShowBatchDetail, getTrainerName }) 
 
         Post(urls.batchWiseStudent, studentData)
           .then(response => {
-            dispatch(feedbackAnsActions.addBatchwiseStudent(response.data));
-
-            setSnackbar({ open: true, message: `Students added successfully`, severity: 'success' });
+            if(response?.status === 200 || response?.status === 201){
+              setSnackbar({ open: true, message: `Students added successfully`, severity: 'success' });
+              dispatch(feedbackAnsActions.addBatchwiseStudent(response.data));
+            }            
           })
           .catch(error => {
-    
             setSnackbar({ open: true, message: `Error adding student ${studentId}`, severity: 'error' });
           });
       }
@@ -172,17 +172,17 @@ function BatchDetails({ selectedBatch, updateShowBatchDetail, getTrainerName }) 
 
     Delete(deleteUrl)
       .then((response) => {
-        dispatch(feedbackAnsActions.deleteBatchWiseStudent(deletingRecordId));
- 
+        if(response?.status === 200 || response?.status === 201){
         setSnackbar({ open: true, message: 'Student deleted successfully', severity: 'success' });
-
+        dispatch(feedbackAnsActions.deleteBatchWiseStudent(deletingRecordId));
         // Update the local state to remove the deleted student
         const updatedStudents = batchStudents.filter(student => student.id !== deletingRecordId);
         setBatch(updatedStudents);
+        }
       })
       .catch((error) => {
 
-        setSnackbar({ open: true, message: 'Error deleting student', severity: 'error' });
+        setSnackbar({ open: true, message: error?.message, severity: 'error' });
       });
   };
 

@@ -31,6 +31,7 @@ import CustomAppBar from '../../../component/common/CustomAppBar';
 import { urls } from '../../../utils/constant';
 import * as validation from '../../../utils/constant';
 import logoimg from '../../../asset/img/Hematite Logo.jpg'
+import { capitalizeFirstLetter } from '../../../component/common/CapitalizeFirstLetter';
 
 
 function EmployeeRegistration() {
@@ -277,16 +278,30 @@ function EmployeeRegistration() {
       employeeId: state.employeeId,
     };
     Post(urls.staff, payload)
-      .then(response => dispatch(userActions.addUser(response.data)))
-      .catch(error => console.log("user error: ", error))
+      .then(response => {
+        if(response.status === 201 || response.status === 200 ){
+          setState((prevState) => ({
+            ...prevState,
+            snackbarOpen: true,
+            snackbarMessage: 'Employee registered.',
+            severity: 'success',
+          }));
+          dispatch(userActions.addUser(response.data))
+        }
+        
+
+      })
+      .catch(error =>{
+        setState((prevState) => ({
+          ...prevState,
+          snackbarOpen: true,
+          snackbarMessage: error.message,
+          severity: 'error',
+        }));
+      })
 
 
-    setState((prevState) => ({
-      ...prevState,
-      snackbarOpen: true,
-      snackbarMessage: 'User successfully registered.',
-      severity: 'success',
-    }));
+   
 
     setTimeout(() => {
       nav('/')
@@ -646,17 +661,17 @@ function EmployeeRegistration() {
                   <li>One uppercase character</li>
                   <li>One number</li>
                   <li>One special character</li>
-                  <li>8 characters minimum</li>
+                  <li>Your password must be between 8 and 14 characters long</li>
                 </ul>
               </div>
             )}
  
-            <FormControl fullWidth disabled={!isFieldsEnabled}   >
+            <FormControl fullWidth  aria-readonly>
               <p style={{ textAlign: 'left' }} >Select Gender</p>
-              <RadioGroup aria-label="gender" name="gender" value={gender || ' '} onChange={handleChange} row>
-                <FormControlLabel value="male" control={<Radio />} label="Male" />
-                <FormControlLabel value="female" control={<Radio />} label="Female" />
-                <FormControlLabel value="other" control={<Radio />} label="Other" />
+              <RadioGroup aria-label="gender" name="gender" value={gender || ' '} aria-readonly  row>
+                <FormControlLabel aria-readonly value="male" control={<Radio />} label="Male" />
+                <FormControlLabel  aria-readonly value="female" control={<Radio />} label="Female" />
+                <FormControlLabel  aria-readonly value="other" control={<Radio />} label="Other" />
               </RadioGroup>
             </FormControl>
 
@@ -667,7 +682,7 @@ function EmployeeRegistration() {
                 color="secondary"
                 label="Role"
                 onChange={handleChange}
-                value={role}
+                value={capitalizeFirstLetter(role)}
                 name="role"
                 fullWidth
                 required
@@ -697,6 +712,7 @@ function EmployeeRegistration() {
                 InputLabelProps={{
                   style: {
                     fontSize: isSmallScreen ? '12px' : '16px', // Adjust label font size based on screen size
+                    
                     // Add more label styles here
                   },
                 }}
