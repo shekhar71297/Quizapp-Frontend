@@ -51,15 +51,6 @@ export default function Login() {
   });
   const [user, setUser] = useState(null);
 
-  // useEffect(() => {
-  //   Get(`${urls.user}`)
-  //     .then((response) => {
-  //       const reversedUsers = response.data.reverse(); // Reverse the array of users
-  //       dispatch(userActions.getUser(reversedUsers));
-  //     })
-  //     .catch((error) => console.log('user error: ', error));
-  // }, []);
-
   //-------------------------------------handle submit------------------------------------//
   const handleSubmit = async (event) => {
     event.preventDefault();
