@@ -22,7 +22,8 @@ export const urls = {
   sendEmail:'/api/send-email/',
   course:'/api/course/',
   enquiry:'/api/enquiry/',
-  enroll:'/api/enroll/'
+  enroll:'/api/enroll/',
+  loginUser:'/api/user/me/'
 };
 
 //-------------------------Validation Regx----------------------//
@@ -31,7 +32,6 @@ export const isValidQue = (que) => /^[a-zA-Z0-9., ]{5,500}$/.test(que);
 export const isValidName = (name) => /^[a-zA-Z]{2,20}$/.test(name);
 export const isValidContact = (contact) => /^[6789]\d{9}$/.test(contact);
 export const isValidEmail = (email) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z]{3,}\.[a-zA-Z]{2,}$/g.test(email);
-// export const isValidEmail = (email) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/mg.test(email);
 
 export const isValidPnr = (pnr) => /^[0-9]{16,20}$/.test(pnr);
 export const isValidPassword = (Password) => /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,14}$/.test(Password);

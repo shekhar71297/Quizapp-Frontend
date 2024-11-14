@@ -5,10 +5,11 @@ const initialState = {
     SingleUser: {},
     error: null,
     allBranch: [],
+    loginUser: []
 };
 
 export const userSlice = createSlice({
-    name:'user',
+    name: 'user',
     initialState,
     reducers: {
         getBranch: (state, action) => {
@@ -40,9 +41,12 @@ export const userSlice = createSlice({
             const index = state.allUser.findIndex(d => d.id === action.payload);
             const user = state.allUser[index];
             state.SingleUser = user;
-            
         },
-    },
+        GetLogginUser: (state, action) => {
+            state.loginUser = action.payload;
+        }
+    }
+
 });
 
 export const userActions = userSlice.actions;
