@@ -50,7 +50,7 @@ import { questionActions } from '../questionSliceReducer';
 import { capitalizeFirstLetter } from '../../../component/common/CapitalizeFirstLetter';
 import CancelIcon from '@mui/icons-material/Cancel';
 import './question.css'
-
+import * as validation from '../../../utils/constant';
 const QuestionModule = () => {
   const [formValues, setFormValues] = useState({
     open: false,
@@ -78,6 +78,7 @@ const QuestionModule = () => {
   const { allExam } = useSelector((store) => store.exam);
   const [selectedFile, setSelectedFile] = useState(null);
   const [successSnackbarOpen, setSuccessSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('')
   const [csvData, setCsvData] = useState([]);
   const [examName, setExamName] = useState('');
   const theme = useTheme();
@@ -86,6 +87,13 @@ const QuestionModule = () => {
   const Alert = React.forwardRef(function Alert(props, ref) {
     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
   });
+
+  const [errors, setErrors] = useState(
+    {
+      marksError: false,
+
+    }
+  );
 
   useEffect(() => {
     Get(urls.exams)
@@ -165,6 +173,18 @@ const QuestionModule = () => {
 
   };
 
+  const handleBlur = (event) => {
+    const { name, value } = event.target;
+
+    if (name === 'marks') { // Corrected 'Password' to 'password'
+      const isMarksError = !validation.isValidMark(value);
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        marksError: isMarksError,
+
+      }));
+    }
+  }
   const handleSnackbarClose = () => {
     setErrorSnackbarOpen(false);
   };
@@ -216,7 +236,11 @@ const QuestionModule = () => {
 
     Post(urls.question, formData)
       .then((response) => {
-        dispatch(questionActions.addQuestion(response.data));
+        if (response?.status === 200 || response?.status === 201) {
+          setSuccessSnackbarOpen(true)
+          setSnackbarMessage('Question added !')
+          dispatch(questionActions.addQuestion(response.data));
+        }
 
         // Reset form field values
         setFormValues({
@@ -233,7 +257,11 @@ const QuestionModule = () => {
         });
         handleClose();
       })
-      .catch((error) => console.log("question error: ", error));
+      .catch((error) => {
+        setErrorSnackbarOpen(true)
+        setErrorMessage(error?.message)
+      });
+
 
   };
 
@@ -271,8 +299,20 @@ const QuestionModule = () => {
 
   const handleDelete = (questionId) => {
     Delete(`${urls.question}${questionId}`)
-      .then(response => dispatch(questionActions.deleteQuestion(questionId)))
-      .catch(error => console.log("question error: ", error));
+      .then((response) => {
+        if (response?.status === 200 || response?.status === 201) {
+          setSuccessSnackbarOpen(true)
+          setSnackbarMessage('Question Deleted !')
+          dispatch(questionActions.deleteQuestion(questionId))
+        }
+      }
+
+      )
+
+      .catch((error) => {
+        setErrorSnackbarOpen(true)
+        setErrorMessage(error?.message)
+      });
   };
 
   const handleEdit = (question) => {
@@ -312,8 +352,12 @@ const QuestionModule = () => {
     // Make the API call to update the question
     Put(`${urls.question}${editingQuestion.id}/`, formData)
       .then((response) => {
-        // Dispatch action to update the question in the Redux store
-        dispatch(questionActions.updateQuestion(response.data));
+        if (response?.status === 200 || response.status === 201) {
+          setSuccessSnackbarOpen(true)
+          setSnackbarMessage('Question Updated !')
+          // Dispatch action to update the question in the Redux store
+          dispatch(questionActions.updateQuestion(response.data));  
+        }
 
         // Reset form field values
         setFormValues({
@@ -330,7 +374,10 @@ const QuestionModule = () => {
         });
         handleClose();
       })
-      .catch((error) => console.log("edit question error: ", error));
+      .catch((error) => {
+        setErrorSnackbarOpen(true)
+        setErrorMessage(error?.message)
+      });
 
   };
   // -------------------------------File upload------------------------------//
@@ -347,14 +394,16 @@ const QuestionModule = () => {
 
     Post(urls.upload_csv, formData)
       .then((response) => {
-        setSuccessSnackbarOpen(true);
-        dispatch(questionActions.addCsvFile(response.data));
-        console.log('select', selectedFile);
+        if(response?.status === 200 || response?.status===201){
+          setSuccessSnackbarOpen(true);
+          setSnackbarMessage('File uploaded !')
+          dispatch(questionActions.addCsvFile(response.data));
+        }
       })
       .catch((error) => {
         console.error(error); // Log error for debugging or display an error message to the user
         setErrorSnackbarOpen(true); // Open the error snackbar
-        setErrorMessage('An error occurred while uploading the file.');
+        setErrorMessage(error?.message);
       });
   };
 
@@ -380,7 +429,7 @@ const QuestionModule = () => {
   //-------------------------------------Export csv format----------------------------//
   const handleExportCSVFormat = () => {
     const headers = ['question', 'option1', 'option2', 'option3', 'option4', 'answer', 'marks', 'level', 'exam_id'];
-    const demoData = ["HTML stands for?", "HyperText Machine Language", "HyperText Markup Language","HyperText Marking Language","HighText Marking Language","option2","1","simple/intermediate/complex","1"];
+    const demoData = ["HTML stands for?", "HyperText Machine Language", "HyperText Markup Language", "HyperText Marking Language", "HighText Marking Language", "option2", "1", "simple/intermediate/complex", "1"];
     // Create CSV content with headers and one row of demo data
     const csvContent = `data:text/csv;charset=utf-8,${headers.join(',')}\n${demoData.join(',')}\n`;
     // Create a download link for the CSV file with headers and demo data
@@ -409,7 +458,7 @@ const QuestionModule = () => {
 
       <Snackbar open={successSnackbarOpen} anchorOrigin={{ vertical: 'top', horizontal: 'center' }} autoHideDuration={3000} onClose={handleSuccessSnackbarClose}>
         <Alert onClose={handleSuccessSnackbarClose} severity="success">
-          File uploaded successfully.
+          {snackbarMessage}
         </Alert>
       </Snackbar>
       <Card sx={{ marginRight: "25px", marginTop: 7, position: "relative", right: 20, borderRadius: '0px' }}>
@@ -463,7 +512,7 @@ const QuestionModule = () => {
                         onClick={handleClickOpen}>
                         Add
                       </Button>
-                      {filteredQuestions.length > 0 ?( <Button
+                      {filteredQuestions.length > 0 ? (<Button
                         variant="contained"
                         color="primary"
                         component={'button'}
@@ -473,8 +522,8 @@ const QuestionModule = () => {
                         onClick={handleExportCSV} // Attach the event handler to the button
                       >
                         Export CSV
-                      </Button>): null}
-                     
+                      </Button>) : null}
+
                     </div>
                   )}
                   {!selectedExam && (
@@ -489,7 +538,7 @@ const QuestionModule = () => {
                     >
                       Export CSV Format
                     </Button>
-                    
+
                   )}
                   <FormControl size='small' >
                     <InputLabel id="demo-simple-select-autowidth-label" style={{ fontSize: isSmallScreen ? '12px' : '16px' }}>Select Exam</InputLabel>
@@ -500,12 +549,12 @@ const QuestionModule = () => {
                       value={selectedExam}
                       onChange={handleExamChange}
                       autoWidth
-                      style={{ backgroundColor: 'white', width: isSmallScreen ? '130px' : '150px', height: isSmallScreen ? '30px' : "40px" }}
+                      style={{ backgroundColor: 'white', width: isSmallScreen ? '130px' : '200px', height: isSmallScreen ? '30px' : "40px" }}
                       label="Select Exam"
                     >
-                      {/* <MenuItem sx={{ width: isSmallScreen ? '130px' : '150px', height: isSmallScreen ? '30px' : "40px", justifyContent: 'center' }} >None</MenuItem> */}
+                      <MenuItem aria-readonly sx={{ width: isSmallScreen ? '130px' : '200px', height: isSmallScreen ? '30px' : "40px", justifyContent: 'center' }} >None</MenuItem>
                       {allExam.map((exam) => (
-                        <MenuItem key={exam.id} value={exam.id} sx={{ width: isSmallScreen ? '130px' : '150px', height: isSmallScreen ? '30px' : "40px", justifyContent: 'center' }}  >
+                        <MenuItem key={exam.id} value={exam.id} sx={{ width: isSmallScreen ? '130px' : '200px', height: isSmallScreen ? '30px' : "40px", justifyContent: 'center' }}  >
                           {capitalizeFirstLetter(exam.examName)}
                         </MenuItem>
                       ))}
@@ -569,10 +618,10 @@ const QuestionModule = () => {
                         onChange={(e) => handleOptionChange('answer', e.target.value)}
                         label="Answer"
                       >
-                        <MenuItem value='option1'>option1</MenuItem>
-                        <MenuItem value='option2'>option2</MenuItem>
-                        <MenuItem value='option3'>option3</MenuItem>
-                        <MenuItem value='option4'>option4</MenuItem>
+                        <MenuItem value='option1'>Option1</MenuItem>
+                        <MenuItem value='option2'>Option2</MenuItem>
+                        <MenuItem value='option3'>Option3</MenuItem>
+                        <MenuItem value='option4'>Option4</MenuItem>
                       </Select>
                     </FormControl>
                     <FormControl fullWidth sx={{ marginTop: '24px' }} >
@@ -586,7 +635,7 @@ const QuestionModule = () => {
                         onChange={(e) => handleOptionChange('level', e.target.value)}
                       >
                         {questionLevels.map((level, index) => (
-                          <MenuItem key={index} value={level}>{level}</MenuItem>
+                          <MenuItem key={index} value={level}>{capitalizeFirstLetter(level)}</MenuItem>
                         ))}
                       </Select>
                     </FormControl>
@@ -599,7 +648,10 @@ const QuestionModule = () => {
                       value={marks}
                       name='marks'
                       onChange={(e) => handleOptionChange('marks', e.target.value)}
-                      helperText={'eg:1,2,3,4'}
+                      onBlur={handleBlur}
+                      inputProps={{ maxLength: 2 }}
+                      error={errors.marksError}
+                      helperText={(errors.marksError && validation.errorText("Invalid marks.E.g-1,10"))}
                     />
                     <TextField
                       fullWidth
@@ -632,7 +684,7 @@ const QuestionModule = () => {
               </Dialog>
 
               <TableRow>
-                <TableCell align="center"><Typography component="span" variant="subtitle1" sx={{ fontWeight: "bold" }}>{filteredQuestions.length> 0 ? 'Questions' :'Questions not found' }</Typography>
+                <TableCell align="center"><Typography component="span" variant="subtitle1" sx={{ fontWeight: "bold" }}>{filteredQuestions.length > 0 ? 'Questions' : 'Questions not found'}</Typography>
                 </TableCell>
               </TableRow>
               <TableBody>
@@ -687,25 +739,25 @@ const QuestionModule = () => {
 
                     )
                   }))}
-                  
+
               </TableBody>
               {filteredQuestions?.length > 0 ? (
                 <TablePagination
-                rowsPerPageOptions={[5, 10, 25]}
-                colSpan={7}
-                count={filteredQuestions.length}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                SelectProps={{
-                  inputProps: { 'aria-label': 'rows per page' },
-                  native: true,
-                }}
-                onPageChange={handleChangePage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-              />
+                  rowsPerPageOptions={[5, 10, 25]}
+                  colSpan={7}
+                  count={filteredQuestions.length}
+                  rowsPerPage={rowsPerPage}
+                  page={page}
+                  SelectProps={{
+                    inputProps: { 'aria-label': 'rows per page' },
+                    native: true,
+                  }}
+                  onPageChange={handleChangePage}
+                  onRowsPerPageChange={handleChangeRowsPerPage}
+                />
 
-              ):null}
-              
+              ) : null}
+
             </Table>
           </TableContainer>
         </CardContent>

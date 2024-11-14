@@ -40,6 +40,7 @@ import { feedbackAnsActions } from '../trainerFeedback/trainerSliceReducer';
 import { Get } from '../../services/Http.Service';
 import { urls } from '../../utils/constant';
 import { useEffect } from 'react';
+import { userActions } from '../user/userSliceReducer';
 
 
 const drawerWidth = 240;
@@ -117,50 +118,64 @@ const ControlPanel = () => {
   const [open, setOpen] = React.useState(true);
   const [showAlert, setShowAlert] = React.useState(false);
   const [ShowScheduledAlert, setShowScheduledAlert] = React.useState(false);
-
+  const { loginUser } = useSelector((store) => store.user);
+  const dispatch = useDispatch();
   const [alertMessage, setAlertMessage] = React.useState('');
   const [alertSeverity, setAlertSeverity] = React.useState('info');
   const navigate = useNavigate();
   const location = useLocation();
-  const isRole = sessionStorage.getItem("role") === "admin";
-  const role = sessionStorage.getItem('role')
-  const userName = sessionStorage.getItem("user");
-  const dispatch = useDispatch();
-  const { allScheduledFeedback, } = useSelector((store) => store.feedbackAns);
-  const [sentEmail, setSentEmail] = React.useState(false);
-  const [currentDate, setCurrentDate] = React.useState(new Date().toISOString().slice(0, 10));
-  const [oldDate, setOldDate] = React.useState("0000-00-00")
+ 
 
   useEffect(() => {
-    Get(urls.scheduled)
-      .then(response => {
-        const reverseFeedback = response.data.reverse();
-        console.log('Fetched Feedback:', reverseFeedback);
-        dispatch(feedbackAnsActions.getScheduledFeedback(reverseFeedback));
+    Get(`${urls.loginUser}`)
+      .then((response) => {
+        dispatch(userActions.GetLogginUser(response.data));
       })
-      .catch(error => {
-        console.error('Error fetching feedback:', error);
-      });
+      .catch((error) => console.log('user error: ', error));
   }, []);
-  console.log(currentDate);
+ 
+  
+  const isRole =  loginUser?.role === "admin";
+  const isCounsellor = loginUser?.role === "counsellor"
+  const role = loginUser?.role;
+  const userName = `${loginUser?.fname} ${loginUser?.lname}`;
 
-  useEffect(() => {
-    const newDate = new Date().toISOString().slice(0, 10);
-    setCurrentDate(newDate);
-  }, [])
+ 
+  // const { allScheduledFeedback, } = useSelector((store) => store.feedbackAns);
+  // const [sentEmail, setSentEmail] = React.useState(false);
+  // const [currentDate, setCurrentDate] = React.useState(new Date().toISOString().slice(0, 10));
+  // const [oldDate, setOldDate] = React.useState("0000-00-00")
 
-  useEffect(() => {
-    setTimeout(() => {
-      if (oldDate !== currentDate) {
-        setOldDate(currentDate) // Update the current date
-        setSentEmail(true); // Reset sentEmail to false when the date changes
-      } else {
-        setSentEmail(false)
-      }
-    }, 1000); // Check every minute
+  // useEffect(() => {
+  //   Get(urls.scheduled)
+  //     .then(response => {
+  //       const reverseFeedback = response.data.reverse();
+  //       console.log('Fetched Feedback:', reverseFeedback);
+  //       dispatch(feedbackAnsActions.getScheduledFeedback(reverseFeedback));
+  //     })
+  //     .catch(error => {
+  //       console.error('Error fetching feedback:', error);
+  //     });
+  // }, []);
+  // console.log(currentDate);
+
+  // useEffect(() => {
+  //   const newDate = new Date().toISOString().slice(0, 10);
+  //   setCurrentDate(newDate);
+  // }, [])
+
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     if (oldDate !== currentDate) {
+  //       setOldDate(currentDate) // Update the current date
+  //       setSentEmail(true); // Reset sentEmail to false when the date changes
+  //     } else {
+  //       setSentEmail(false)
+  //     }
+  //   }, 1000); // Check every minute
 
     
-  }, [currentDate]);
+  // }, [currentDate]);
 
   // useEffect(() => {
   //   console.log('All Scheduled Feedback:', allScheduledFeedback);
@@ -170,30 +185,30 @@ const ControlPanel = () => {
   // }, [sentEmail]);
 
 
-  if (sentEmail == true && isRole) {
-    setSentEmail(false)
-    console.log('Feedback List for Check:', allScheduledFeedback);
-    const today = new Date().toISOString().slice(0, 10);
-    console.log('Today\'s Date:', today);
-    const feedbackKeys = ['feedback1', 'feedback2', 'feedback3', 'feedback4'];
-    let foundPending = false;
+  // if (sentEmail == true && isRole) {
+  //   setSentEmail(false)
+  //   console.log('Feedback List for Check:', allScheduledFeedback);
+  //   const today = new Date().toISOString().slice(0, 10);
+  //   console.log('Today\'s Date:', today);
+  //   const feedbackKeys = ['feedback1', 'feedback2', 'feedback3', 'feedback4'];
+  //   let foundPending = false;
 
-    allScheduledFeedback.forEach(feedback => {
-      feedbackKeys.forEach((key, index) => {
-        if (feedback[key] && feedback[key].includes(today) && feedback[`status${index + 1}`] === 'pending') {
-          console.log('Found Pending Feedback:', feedback);
-          foundPending = true;
-          setSentEmail(false)
-        }
-      });
-    });
+  //   allScheduledFeedback.forEach(feedback => {
+  //     feedbackKeys.forEach((key, index) => {
+  //       if (feedback[key] && feedback[key].includes(today) && feedback[`status${index + 1}`] === 'pending') {
+  //         console.log('Found Pending Feedback:', feedback);
+  //         foundPending = true;
+  //         setSentEmail(false)
+  //       }
+  //     });
+  //   });
 
-    if (foundPending) {
-      setAlertSeverity('info');
-      setAlertMessage(`Feedack mail send successfully as per the scheduled date`);
-      setShowScheduledAlert(true);
-    }
-  };
+  //   if (foundPending) {
+  //     setAlertSeverity('info');
+  //     setAlertMessage(`Feedack mail send successfully as per the scheduled date`);
+  //     setShowScheduledAlert(true);
+  //   }
+  // };
 
   const handleConfirmation = () => {
     setShowScheduledAlert(false);
@@ -296,7 +311,7 @@ const ControlPanel = () => {
               </ListItem>
 
            {/*-----------------------------------Enrollment details module-------------------------------------- */}
-           {isRole && (
+           {(isRole || isCounsellor) && (
               <ListItem
              disablePadding
              sx={{ display: 'block' }}
@@ -316,18 +331,18 @@ const ControlPanel = () => {
                    justifyContent: 'center',
                  }}
                >
-                 <Tooltip title="Register Student">
+                 <Tooltip title="Registered Student">
                    <IconButton>
                      <IoMdPersonAdd style={{ color: '#2c387e', fontSize: '20px' }} />
                    </IconButton>
                  </Tooltip>
                </ListItemIcon>
-               <ListItemText className='menu-color' primary='Register Student' sx={{ opacity: open ? 1 : 0 }} />
+               <ListItemText className='menu-color' primary='Registered Student' sx={{ opacity: open ? 1 : 0 }} />
              </ListItemButton>
            </ListItem>
            )}
              {/*-----------------------------------Enquiry details module-------------------------------------- */}
-             {isRole && (
+             {(isRole || isCounsellor) && (
              <ListItem
              disablePadding
              sx={{ display: 'block' }}

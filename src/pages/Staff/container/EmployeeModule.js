@@ -35,6 +35,7 @@ import { staffActions } from '../staffSliceReducer';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import { useTheme } from '@material-ui/core/styles';
 import * as validation from '../../../utils/constant';
+import { userActions } from '../../user/userSliceReducer';
 
 
 const EmployeeModule = () => {
@@ -74,6 +75,7 @@ const EmployeeModule = () => {
   const dispatch = useDispatch();
   const { allEmployee } = useSelector((store) => store.employee)
   const { emp } = useSelector((state) => state.employee);
+  const { allUser } = useSelector((store) => store.user)
   const [showSubmitButton, setShowSubmitButton] = useState(true);
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
@@ -87,6 +89,16 @@ const EmployeeModule = () => {
       })
       .catch(error => console.log("staff error: ", error));
   }, []);
+
+  useEffect(() => {
+    Get(urls.user).then(response => {
+
+      const reversedexam = response.data.reverse(); // Reverse the array of users
+      dispatch(userActions.getUser(reversedexam));
+    })
+      .catch(error => console.log("user error: ", error));
+  }, [])
+
 
   // Update form fields when emp state changes
   useEffect(() => {
@@ -176,6 +188,9 @@ const EmployeeModule = () => {
         setErrors(prevErrors => ({ ...prevErrors, emailError: isEmailError }));
         break;
       case "employeeId":
+        const isEmpIdError = !(validation.isValidEmpId(value));
+        setErrors(prevErrors => ({ ...prevErrors, employeeIdError: isEmpIdError }));
+
         if (name === 'employeeId') {
           if (!Number.isInteger(Number(value))) {
             setErrors(prevErrors => ({ ...prevErrors, employeeIdError: true, }));
@@ -233,17 +248,51 @@ const EmployeeModule = () => {
 
   // Confirm employee deletion
   const confirmDelete = () => {
-
     const id = recordToDeleteId;
-    Delete(`${urls.employee}${id}`)
-      .then(response => dispatch(staffActions.deleteEmployee(id)))
-      .catch(error => console.log("employee error: ", error));
 
-    closeConfirmDialog();
-    setSnackbarOpen(true);
-    setSnackbarMessage('Employee deleted successfully');
-    setSeverity('error');
+    // Find the employee email using find() instead of filter()
+    const employee = allEmployee?.find((val) => val.id === id);
+
+    if (employee) {
+      const email = employee.email;
+
+      // Find the user by email
+      const user = allUser?.find((val) => val.email === email);
+
+      // Delete employee
+      Delete(`${urls.employee}${id}`)
+        .then(response => {
+          if(response.status === 200 || response.status === 201){
+            closeConfirmDialog();
+            setSnackbarOpen(true);
+            setSnackbarMessage('Employee Deleted!');
+            setSeverity('success');
+          dispatch(staffActions.deleteEmployee(id));
+          }
+        
+        })
+        .catch(error => console.log("Employee deletion error: ", error));
+
+      // Delete user if found
+      if (user) {
+        Delete(`${urls.user}${user.id}`)
+          .then(response => {
+            if(response.status === 200 || response.status === 201){
+              dispatch(userActions.deleteUser(user.id));
+            }  
+          })
+          .catch(error => {
+            setSnackbarOpen(true);
+            setSnackbarMessage(error?.message);
+            setSeverity('error');
+          });
+      }
+
+      // Close confirmation dialog and show success message
+      
+    } 
   };
+
   // Delete data handler
   const deletedata = (id) => {
     openConfirmDialog(id);
@@ -295,9 +344,9 @@ const EmployeeModule = () => {
     }
 
     let empObj = {
-      email: email,
-      fname: fname,
-      lname: lname,
+      email: email.toLowerCase(),
+      fname: fname.toLowerCase(),
+      lname: lname.toLowerCase(),
       role: role,
       dob: dob,
       employeeId: employeeId,
@@ -308,25 +357,41 @@ const EmployeeModule = () => {
       // addEmployeeRequest(empObj);
       Post(urls.employee, empObj)
         .then(response => {
-          dispatch(staffActions.addEmployee(response.data));
-          const reverseEmp = [response.data].reverse();
-          const updateEmp = [...reverseEmp, ...allEmployee];
-          dispatch(staffActions.getEmployee(updateEmp));
+          if (response.status === 200 || response.status === 201) {
+            setSnackbarOpen(true);
+            setSnackbarMessage('Employee Added!.');
+            setSeverity("success");
+            dispatch(staffActions.addEmployee(response.data));
+            const reverseEmp = [response.data].reverse();
+            const updateEmp = [...reverseEmp, ...allEmployee];
+            dispatch(staffActions.getEmployee(updateEmp));
+          }
         })
-        .catch(error => console.log("employee error: ", error));
-      setSnackbarOpen(true);
-      setSnackbarMessage('employee added successfully.');
-      setSeverity("success");
+        .catch(error => {
+          setSnackbarOpen(true);
+          setSnackbarMessage(error?.message);
+          setSeverity("error");
+        });
+
 
     } else {
       // Update existing employee
       empObj['id'] = id;
       Put(`${urls.employee}${empObj.id}/`, empObj)
-        .then(response => dispatch(staffActions.updateEmployee(response.data)))
-        .catch(error => console.log("employee error: ", error));
-      setSnackbarOpen(true);
-      setSnackbarMessage('employee updated successfully.');
-      setSeverity("success");
+        .then(response => {
+          if (response.status === 200 || response.status === 201) {
+            setSnackbarOpen(true);
+            setSnackbarMessage('Employee Updated!.');
+            setSeverity("success");
+            dispatch(staffActions.updateEmployee(response.data))
+          }
+        })
+        .catch(error => {
+          setSnackbarOpen(true);
+          setSnackbarMessage(error?.message);
+          setSeverity("error");
+        });
+
     }
 
     handleClose();
@@ -353,7 +418,7 @@ const EmployeeModule = () => {
     return fnameIncludes || lnameIncludes || emailIncludes || roleIncludes || dateIncludes || genderIncludes || contactIncludes || employeeIdIncludes;
   });
   // Determine if submit button should be disabled
-  const isSubmitDisabled = !fname || !lname || !email || !dob || !contact || !role || !gender || errors.fnameError || errors.lnameError || errors.emailError || errors.contactError || errors.passwordError;
+  const isSubmitDisabled = !fname || !lname || !email || !dob || !contact || !role || !gender || !employeeId || errors.fnameError || errors.lnameError || errors.emailError || errors.contactError || errors.passwordError || errors.employeeIdError;
 
   return (
     <>
@@ -427,7 +492,7 @@ const EmployeeModule = () => {
                         <TableCell style={{ fontSize: '13px' }} className="tablebody" align="left">{capitalizeFirstLetter(data.fname) + ' ' + capitalizeFirstLetter(data.lname)}</TableCell >
                         <TableCell style={{ fontSize: '13px' }} className="tablebody" align="left">{data.email}</TableCell>
                         <TableCell style={{ fontSize: '13px' }} className="tablebody" align="left">{data.employeeId}</TableCell>
-                        
+
                         <TableCell className="tablebody" align="center" >
                           <IconButton aria-label="logout"  >
                             <EditIcon onClick={() => (handleOpen(data.id))} style={{ color: '#2c387e', fontSize: '18px' }} />
@@ -480,76 +545,80 @@ const EmployeeModule = () => {
               <Grid container spacing={2} sx={{ marginTop: 3 }}>
                 <Grid item xs={12} >
                   <TextField
-                    required
-                    label="First Name"
+                    // required
+                    label={<span>First Name<span style={{ color: 'red' }}>*</span></span>}
                     variant="outlined"
                     fullWidth
                     name="fname"
                     size='small'
                     type="text"
                     value={fname}
+                    inputProps={{ maxLength: 20 }}
                     onChange={handleChange}
                     onBlur={handleBlur}
                     error={errors.fnameError}
-                    helperText={errors.fnameError && validation.errorText("Please enter a valid first name") || 'eg:John'}
+                    helperText={errors.fnameError && validation.errorText("Invalid First Name")}
                   />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid item xs={12} sx={{ marginTop: 2 }}>
                   <TextField
-                    required
-                    label="Last Name"
+                    // required
+                    label={<span>Last Name<span style={{ color: 'red' }}>*</span></span>}
                     variant="outlined"
                     type="text"
                     fullWidth
                     name="lname"
                     size='small'
+                    inputProps={{ maxLength: 20 }}
                     value={lname}
                     onChange={handleChange}
                     onBlur={handleBlur}
                     error={errors.lnameError}
-                    helperText={errors.lnameError && validation.errorText("Please enter a valid last name") || 'eg: Dev'}
+                    helperText={errors.lnameError && validation.errorText("Invalid Last Name")}
                   />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid item xs={12} sx={{ marginTop: 2 }}>
                   <TextField
-                    required
-                    label="Email"
+                    // required
+                    label={<span>Email<span style={{ color: 'red' }}>*</span></span>}
                     variant="outlined"
                     fullWidth
                     type='email'
                     name="email"
                     size='small'
                     value={email}
+                    inputProps={{ maxLength: 40 }}
                     onChange={handleChange}
                     onBlur={handleBlur}
                     error={errors.emailError}
-                    helperText={errors.emailError && validation.errorText("Please enter a valid Email") || 'eg: John1@gmail.com'}
+                    helperText={errors.emailError && validation.errorText("Invalid Email")}
                   />
                 </Grid>
 
-                <Grid item xs={12}>
+                <Grid item xs={12} sx={{ marginTop: 2 }}>
                   <TextField
-                    required
-                    label="Contact"
+                    // required
+                    label={<span>Contact<span style={{ color: 'red' }}>*</span></span>}
                     variant="outlined"
                     fullWidth
                     type="tel"
                     name="contact"
                     value={contact}
                     size='small'
+                    inputProps={{ maxLength: 10 }}
                     onChange={handleChange}
                     onBlur={handleBlur}
                     error={errors.contactError}
-                    helperText={errors.contactError && validation.errorText("Please enter a valid contact") || 'eg: 8888888888'}
+                    helperText={errors.contactError && validation.errorText("Invalid Contact")}
                   />
                 </Grid>
                 <Grid item xs={12}>
                   <TextField
                     select
                     margin="normal"
-                    required
+                    // required
                     fullWidth
-                    label="Role"
+                    label={<span>Role<span style={{ color: 'red' }}>*</span></span>}
                     name="role"
                     size='small'
                     id="role"
@@ -563,7 +632,7 @@ const EmployeeModule = () => {
                   </TextField>
                 </Grid>
                 <Grid item xs={12}>
-                  <InputLabel sx={{ ml: 1 }}>DOB</InputLabel>
+                  <InputLabel sx={{ ml: 1 }}>DOB<span style={{ color: 'red' }}>*</span></InputLabel>
                   <TextField
                     required
                     variant="outlined"
@@ -575,15 +644,19 @@ const EmployeeModule = () => {
                     onChange={handleChange}
                   />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid item xs={12} >
                   <TextField
-                    required
-                    label="employeeId"
+                    // required
+                    label={<span>Employee Id<span style={{ color: 'red' }}>*</span></span>}
                     variant="outlined"
                     fullWidth
                     name="employeeId"
                     value={employeeId}
+                    inputProps={{ maxLength: 3 }}
                     onChange={handleChange}
+                    onBlur={handleBlur}
+                    helperText={(errors.employeeIdError && validation.errorText('Invalid Employee Id'))}
+                    error={errors.employeeIdError}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -645,61 +718,61 @@ const EmployeeModule = () => {
                   gap: 2,
                 }}>
                   <Typography component="div" variant="subtitle1" sx={{
-                      fontSize: isSmallScreen ? '14px' : '18px', p: 2,
-                      borderRadius: 3,
-                      bgcolor: 'background.default',
-                      display: 'grid',
-                      gap: 0,
-                      maxWidth: '800px',
-                      marginTop: 1
-                    }}>
+                    fontSize: isSmallScreen ? '14px' : '18px', p: 2,
+                    borderRadius: 3,
+                    bgcolor: 'background.default',
+                    display: 'grid',
+                    gap: 0,
+                    maxWidth: '800px',
+                    marginTop: 1
+                  }}>
                     <div> Full Name: {capitalizeFirstLetter(selectedUserdetail.fname)} {capitalizeFirstLetter(selectedUserdetail.lname)}</div>
-                    </Typography>
-                    <Typography component="div" variant="subtitle1" sx={{
-                      fontSize: isSmallScreen ? '14px' : '18px', p: 2,
-                      borderRadius: 3,
-                      bgcolor: 'background.default',
-                      display: 'grid',
-                      gap: 0,
-                      maxWidth: '800px',
-                      boxShadow: 4,
-                    }}><div> Gender: {capitalizeFirstLetter(selectedUserdetail.gender)} </div>
-                    </Typography>
-                    
-                    <Typography component="div" variant="subtitle1" sx={{
-                      fontSize: isSmallScreen ? '14px' : '18px', p: 2,
-                      borderRadius: 3,
-                      bgcolor: 'background.default',
-                      display: 'grid',
-                      gap: 0,
-                      maxWidth: '800px',
-                      boxShadow: 4,
-                    }}><div> Role: {capitalizeFirstLetter(selectedUserdetail.role)} </div>
-                    </Typography>
-                    
-                    <Typography component="div" variant="subtitle1" sx={{
-                      fontSize: isSmallScreen ? '14px' : '18px', p: 2,
-                      borderRadius: 3,
-                      bgcolor: 'background.default',
-                      display: 'grid',
-                      gap: 0,
-                      maxWidth: '800px',
-                      boxShadow: 4,
-                    }}><div> Contact: {capitalizeFirstLetter(selectedUserdetail.contact)} </div>
-                    </Typography>
+                  </Typography>
+                  <Typography component="div" variant="subtitle1" sx={{
+                    fontSize: isSmallScreen ? '14px' : '18px', p: 2,
+                    borderRadius: 3,
+                    bgcolor: 'background.default',
+                    display: 'grid',
+                    gap: 0,
+                    maxWidth: '800px',
+                    boxShadow: 4,
+                  }}><div> Gender: {capitalizeFirstLetter(selectedUserdetail.gender)} </div>
+                  </Typography>
 
-                    <Typography component="div" variant="subtitle1" sx={{
-                      fontSize: isSmallScreen ? '14px' : '18px', p: 2,
-                      borderRadius: 3,
-                      bgcolor: 'background.default',
-                      display: 'grid',
-                      gap: 0,
-                      maxWidth: '800px',
-                      boxShadow: 4,
-                    }}>
-                  
+                  <Typography component="div" variant="subtitle1" sx={{
+                    fontSize: isSmallScreen ? '14px' : '18px', p: 2,
+                    borderRadius: 3,
+                    bgcolor: 'background.default',
+                    display: 'grid',
+                    gap: 0,
+                    maxWidth: '800px',
+                    boxShadow: 4,
+                  }}><div> Role: {capitalizeFirstLetter(selectedUserdetail.role)} </div>
+                  </Typography>
+
+                  <Typography component="div" variant="subtitle1" sx={{
+                    fontSize: isSmallScreen ? '14px' : '18px', p: 2,
+                    borderRadius: 3,
+                    bgcolor: 'background.default',
+                    display: 'grid',
+                    gap: 0,
+                    maxWidth: '800px',
+                    boxShadow: 4,
+                  }}><div> Contact: {capitalizeFirstLetter(selectedUserdetail.contact)} </div>
+                  </Typography>
+
+                  <Typography component="div" variant="subtitle1" sx={{
+                    fontSize: isSmallScreen ? '14px' : '18px', p: 2,
+                    borderRadius: 3,
+                    bgcolor: 'background.default',
+                    display: 'grid',
+                    gap: 0,
+                    maxWidth: '800px',
+                    boxShadow: 4,
+                  }}>
+
                     <div> Dob:{formatDate(selectedUserdetail.dob)}</div>
-                    </Typography>
+                  </Typography>
                 </Box>
               </Grid>
 

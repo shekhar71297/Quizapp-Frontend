@@ -36,7 +36,10 @@ const ForgetPassword = () => {
   const dispatch = useDispatch();
   const { allUser } = useSelector((store) => store.user);
   const [errors, setErrors] = useState({
-    passwordError: false
+    passwordError: false,
+    matchPasswordError: false,
+    password2Error: false,
+    emailError: false,
   });
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
@@ -81,11 +84,43 @@ const ForgetPassword = () => {
       }));
     }
 
+    if (name === 'password2') { // Corrected 'Password' to 'password'
+      const isPasswordError = !validation.isValidPassword(value);
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        password2Error: isPasswordError,
+
+      }));
+    }
+    if (password !== '' && password2 !== '') {
+      if (password !== password2) { // CheckPassword
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          matchPasswordError: true,
+
+        }));
+      } else {
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          matchPasswordError: false,
+
+        }));
+      }
+    }
+    if (name === 'email') {
+      const isEmailError = !validation.isValidEmail(value);
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        emailError: isEmailError,
+      }));
+    }
+
+
   };
 
 
   const submitBtnHandler = () => {
-    const user = allUser.find(user => user.email === email);
+    const user = allUser.find(user => user.email === email.toLowerCase());
     if (user) {
       setFoundUser(user);
       setSnackbarSeverity('success');
@@ -125,19 +160,22 @@ const ForgetPassword = () => {
     const url = `${urls.password}${foundUser.id}/`;
     Put(url, updatedUserData)
       .then(response => {
-        setSnackbarSeverity('success');
-        setSnackbarMessage('Password updated successfully!');
-        setIsSnackbarOpen(true);
+        if (response?.status === 200 || response?.status === 201) {
+          setSnackbarSeverity('success');
+          setSnackbarMessage('Password reset!');
+          setIsSnackbarOpen(true);
+        }
+
       })
       .catch(error => {
         setSnackbarSeverity('error');
-        setSnackbarMessage('Failed to update password!');
+        setSnackbarMessage(error?.message);
         setIsSnackbarOpen(true);
       });
 
     setTimeout(() => {
       handleClick()
-    }, 1000);
+    }, 2000);
   };
 
   //---------------Function to toggle password visibility for password field------------------//
@@ -149,6 +187,7 @@ const ForgetPassword = () => {
   const togglePassword2Visibility = () => {
     setPassword2Visibility((prevState) => !prevState);
   };
+  const isSubmitDisabled = !email || !password || errors.emailError || errors.password2Error || errors.matchPasswordError || !password2
   return (
     <>
 
@@ -180,9 +219,13 @@ const ForgetPassword = () => {
               label="Enter Email Id"
               name="email"
               autoFocus
+              inputProps={{ maxLength: 30 }}
               size='small'
               value={email}
               onChange={inputChangeHandler}
+              onBlur={handleBlur}
+              error={errors.emailError}
+              helperText={(errors.emailError && validation.errorText("Invalid email id"))}
             />
             {show && (
               <>
@@ -213,12 +256,8 @@ const ForgetPassword = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   onBlur={handleBlur}
                   error={errors.passwordError}
-                  helperText={
-                    errors.passwordError ?
-                      validation.errorText("Please enter a valid password") :
-                      'eg.Abcd@1234'// No helper text when there's no error
-
-                  }
+                  inputProps={{ maxLength: 14 }}
+                  helperText={(errors.passwordError && validation.errorText("Invalid password"))}
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position='end'>
@@ -244,7 +283,10 @@ const ForgetPassword = () => {
                   name="password2"
                   type={password2Visibility ? 'text' : 'password'}
                   value={password2}
+                  onBlur={handleBlur}
                   onChange={(e) => setPassword2(e.target.value)}
+                  error={errors.matchPasswordError}
+                  helperText={(errors.matchPasswordError && validation.errorText("Password and Confirm Password doesn't match"))}
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position='end'>
@@ -257,6 +299,7 @@ const ForgetPassword = () => {
                       </InputAdornment>
                     ),
                   }}
+                  inputProps={{ maxLength: 14 }}
                 />
                 {errors.passwordError && (
                   <div>
@@ -265,7 +308,7 @@ const ForgetPassword = () => {
                       <li>One uppercase character</li>
                       <li>One number</li>
                       <li>One special character</li>
-                      <li>8 characters minimum</li>
+                      <li>Your password must be between 8 and 14 characters long</li>
                     </ul>
                   </div>
                 )}
@@ -276,6 +319,7 @@ const ForgetPassword = () => {
                   variant="contained"
                   sx={{ mt: 3, mb: 2 }}
                   onClick={updatePasswordHandler}
+                  disabled={isSubmitDisabled}
                 >
                   Update Password
                 </Button>

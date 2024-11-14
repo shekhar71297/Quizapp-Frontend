@@ -22,21 +22,31 @@ export const urls = {
   sendEmail:'/api/send-email/',
   course:'/api/course/',
   enquiry:'/api/enquiry/',
-  enroll:'/api/enroll/'
+  enroll:'/api/enroll/',
+  loginUser:'/api/user/me/'
 };
 
 //-------------------------Validation Regx----------------------//
 export const isValidFullName = (name) => /^[a-zA-Z ]{2,40}$/.test(name);
-export const isValidQue = (que) => /^[a-zA-Z0-9., ]{5,100}$/.test(que);
-export const isValidName = (name) => /^[a-zA-Z]{2,10}$/.test(name);
+export const isValidQue = (que) => /^[a-zA-Z0-9., ]{5,500}$/.test(que);
+export const isValidName = (name) => /^[a-zA-Z]{2,20}$/.test(name);
 export const isValidContact = (contact) => /^[6789]\d{9}$/.test(contact);
-export const isValidEmail = (email) => /^[a-z0-9.]+@gmail\.com$/mg.test(email);
-export const isValidPnr = (pnr) => /^[A-Za-z0-9-]+$/.test(pnr);
-export const isValidPassword = (Password) => /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/.test(Password);
-export const isValidexamname = (name) => /^[a-zA-Z]{2,10}$/.test(name);
+export const isValidEmail = (email) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z]{3,}\.[a-zA-Z]{2,}$/g.test(email);
+
+export const isValidPnr = (pnr) => /^[0-9]{16,20}$/.test(pnr);
+export const isValidPassword = (Password) => /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,14}$/.test(Password);
+export const isValidExamName = (name) => /^[a-zA-Z0-9\- ]{2,30}$/.test(name);
+export const isValidExamTime = (time) =>/^[a-zA-Z0-9]{1,3}min$/.test(time);
+export const isValidQuestionCount = (count) =>  /^[0-9]{1,3}$/.test(count);
 export const isValidexamcode = (examcode) => /^[a-zA-Z0-9]+[a-zA-Z0-9\- ]{1,9}$/.test(examcode);
 export const isValidQuestion = (question) => /^[1-5]{1}$/.test(question);
-export const isValidMark = (mark) => /^[0-9]+$/.test(mark)
+export const isValidMark = (mark) => /^[0-9]{1,2}$/.test(mark)
+export const isValidOtherBranch = (other) => /^[A-Za-z]{2,30}$/.test(other);
+export const isValidVoucher = (voucher) => /^[A-Z0-9]{6}$/.test(voucher);
+export const isValidFeedbackAns = (ans) =>/^[a-zA-Z]{2,500}$/.test(ans);
+export const isValidEmpId = (emp) => /^[0-9]{3}$/.test(emp);
+export const isValidBatchName = (batch) => /^[a-zA-Z0-9]{1,30}$/.test(batch);
+
 
 export const errorText = (message) => {
   return (<span style={{ 'display': 'flex', 'alignItems': 'center' }}>

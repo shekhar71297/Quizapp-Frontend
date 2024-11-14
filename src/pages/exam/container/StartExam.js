@@ -26,6 +26,7 @@ import { resultActions } from '../../result/resultSliceReducer';
 import { Post } from '../../../services/Http.Service';
 import SubmitExam from './SubmitExam';
 import './Exam.css'
+import { userActions } from '../../user/userSliceReducer';
 
 
 const StartExam = () => {
@@ -46,6 +47,7 @@ const StartExam = () => {
   const [tabSwitchCount, setTabSwitchCount] = useState(0);
   const { examquestion } = useSelector((store) => store.question);
   const { allExam } = useSelector((store) => store.exam);
+  const { loginUser } = useSelector((store) => store.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [showAlert, setShowAlert] = React.useState(false);
@@ -67,7 +69,13 @@ const StartExam = () => {
     };
   }, []);
 
-
+  useEffect(() => {
+    Get(`${urls.loginUser}`)
+      .then((response) => {
+        dispatch(userActions.GetLogginUser(response.data));
+      })
+      .catch((error) => console.log('user error: ', error));
+  }, []);
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -180,7 +188,7 @@ const StartExam = () => {
       return;
     }
 
-    const studentName = sessionStorage.getItem("user");
+    const studentName = `${loginUser?.fname} ${loginUser?.lname}`;
 
     if (studentName) {
       setStudentName(studentName);
@@ -346,7 +354,7 @@ const StartExam = () => {
     }
 
     const examId = sessionStorage.getItem('examId');
-    const studentId = sessionStorage.getItem("studentId");
+    const studentId = loginUser?.id
     const isShow = sessionStorage.getItem('showResult')
     console.log(isShow);
 
@@ -358,9 +366,16 @@ const StartExam = () => {
 
     Post(urls.submit_exam, req)
       .then((response) => {
-        dispatch(resultActions.addResult(response.data));
+        if (response?.status === 200 || response?.status === 201) {
+          dispatch(resultActions.addResult(response.data));
+        }
+
       })
-      .catch((error) => console.log("question error: ", error));
+      .catch((error) => {
+        setAlertSeverity('error'); // or 'info', 'error', etc. based on your needs
+        setAlertMessage(error?.message);
+        setShowAlert(true);
+      });
 
     if (!examSubmitted) {
       setExamSubmitted(true);

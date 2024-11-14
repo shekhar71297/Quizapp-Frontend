@@ -34,7 +34,7 @@ const FeedbackForm = () => {
     question5: '',
     cidacPrn: '',
     otherbranch: '',
-    organization:'',
+    organization: '',
     datetime: new Date().toISOString().split('T')[0],
 
   });
@@ -44,7 +44,12 @@ const FeedbackForm = () => {
     emailError: false,
     contactError: false,
     questionError: false,
-    questionError2: false
+    questionError2: false,
+    pnrNoError: false,
+    otherBranchError: false,
+    questionError3: false,
+    questionError4: false,
+    questionError5: false,
   });
 
   // State to manage snackbar for displaying messages
@@ -59,6 +64,31 @@ const FeedbackForm = () => {
     })
   }, []);
 
+  useEffect(() => {
+
+  }, [])
+
+  useEffect(() => {
+    if (allBranch && allBranch.length === 1) {
+      setSelectedBranch(allBranch[0].branchName);
+      const selectedBranchObject = allBranch.find(branch => branch.branchName === selectedBranch);
+      const branchId = selectedBranchObject ? selectedBranchObject.id : ''; // Get the branch id from the selected branch object
+      setFormData({
+        ...formData,
+        branch_id: branchId, // Update branch_id in formData
+      });
+    }
+  }, [allBranch]);
+  // A separate effect to update formData after selectedBranch is set
+  useEffect(() => {
+    const selectedBranchObject = allBranch?.find(branch => branch.branchName === selectedBranch);
+    if (selectedBranchObject) {
+      setFormData(prevFormData => ({
+        ...prevFormData,
+        branch_id: selectedBranchObject.id,
+      }));
+    }
+  }, [selectedBranch, allBranch]);
   //----------------------------Function to handle changes in form fields----------------------//
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -80,11 +110,17 @@ const FeedbackForm = () => {
     if (name === 'branch' && value === 'Branch') {
       setFormData((prevFormData) => ({
         ...prevFormData,
-        cidacPrn: null ,
+        cidacPrn: null,
         otherbranch: '',
-        organization:'Hematite branch'
+        organization: 'Hematite branch'
       }));
+      setErrors({
+        ...errors,
+        otherBranchError: false,
+        pnrNoError: false
+      })
     }
+
     if (name === 'branch') {
       const selectedBranchObject = allBranch.find(branchObj => branchObj.branchName === value);
       if (selectedBranchObject) {
@@ -95,29 +131,45 @@ const FeedbackForm = () => {
         }));
       }
     }
-    
+
     if (name === 'branch' && value === 'cdac') {
       setFormData((prevFormData) => ({
         ...prevFormData,
         branch: 'cdac',
         branch_id: null,
         otherbranch: '',
-        organization:'Cdac'
+        organization: 'Cdac'
       }));
+      setErrors({
+        ...errors,
+        otherBranchError: false
+      })
     }
     if (name === 'branch' && value === 'otherbranch') {
       setFormData((prevFormData) => ({
         ...prevFormData,
         branch: 'otherbranch',
-        branch_id : null,
-        cidacPrn : null,
-        organization:'Other branch'
+        branch_id: null,
+        cidacPrn: null,
+        organization: 'Other branch'
         // otherbranch: '',
       }));
+      setErrors({
+        ...errors,
+        pnrNoError: false
+      })
     }
   }
   const handleBlur = (event) => {
     const { name, value } = event.target;
+
+    if (name === 'name') {
+      const isFullNameError = !validation.isValidFullName(value);
+      setErrors(prevErrors => ({
+        ...prevErrors,
+        [`${name}Error`]: isFullNameError
+      }));
+    }
     if (name === 'email') {
       const isEmailError = !validation.isValidEmail(value);
       setErrors(prevErrors => ({
@@ -150,6 +202,44 @@ const FeedbackForm = () => {
         questionError2: isQuestionError2
       }));
     }
+    if (name === 'question3') {
+      const isQuestionError3 = !validation.isValidFeedbackAns(value);
+      setErrors(prevErrors => ({
+        ...prevErrors,
+        questionError3: isQuestionError3
+      }));
+    }
+    if (name === 'question4') {
+      const isQuestionError4 = !validation.isValidFeedbackAns(value);
+      setErrors(prevErrors => ({
+        ...prevErrors,
+        questionError4: isQuestionError4
+      }));
+    }
+    if (name === 'question5') {
+      const isQuestionError5 = !validation.isValidFeedbackAns(value);
+      setErrors(prevErrors => ({
+        ...prevErrors,
+        questionError5: isQuestionError5
+      }));
+    }
+    if (name === 'cidacPrn') {
+      const ispnrNoError = !validation.isValidPnr(value);
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        pnrNoError: ispnrNoError,
+      }));
+    }
+
+
+    if (name === 'otherbranch') {
+      const isOtherBranchError = !validation.isValidOtherBranch(value);
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        otherBranchError: isOtherBranchError,
+      }));
+    }
+
 
 
   };
@@ -164,7 +254,13 @@ const FeedbackForm = () => {
       errors.emailError ||
       errors.contactError ||
       errors.questionError ||
-      errors.questionError2
+      errors.questionError2 ||
+      errors.answerError ||
+      errors.otherBranchError ||
+      errors.pnrNoError ||
+      errors.questionError3 ||
+      errors.questionError4 ||
+      errors.questionError5
     ) {
       //--------------------Showing snackbar message for validation errors---------------------//
       setSnackbarOpen(true);
@@ -172,12 +268,35 @@ const FeedbackForm = () => {
       setSnackbarMessage('Please fix the validation errors before submitting.');
       return;
     }
-  
-    Post(urls.feedback, formData).then(response => {
-      dispatch(feedbackActions.postFeedback(response.data))
+    if (branch == 'otherbranch' && otherbranch == '') {
+      setSnackbarOpen(true);
+      setSeverity('error');
+      setSnackbarMessage('Please enter other branch.');
+      return;
+    }
+    if (branch == 'cdac' && (cidacPrn == '' || cidacPrn == null)) {
 
+      setSnackbarOpen(true);
+      setSeverity('error');
+      setSnackbarMessage('Please enter PNR No.');
+      return;
+    }
+
+    Post(urls.feedback, formData).then(response => {
+      if (response?.status === 201 || response?.status === 200) {
+        setSnackbarOpen(true);
+        setSeverity('success');
+        setSnackbarMessage('Thank you! Your feedback has been submitted.');
+        dispatch(feedbackActions.postFeedback(response.data))
+        setTimeout(() => {
+          navigate('/')
+        }, 2000);
+
+      }
     }).catch((error) => {
-      console.log(error)
+      setSnackbarOpen(true);
+      setSeverity('error');
+      setSnackbarMessage(error?.message);
     })
 
     //------------------------------after submting clear the form----------------------------//
@@ -193,17 +312,12 @@ const FeedbackForm = () => {
       question5: '',
       cidacPrn: '',
       otherbranch: '',
-      organization:'',
+      organization: '',
       datetime: new Date().toISOString().split('T')[0],
       branch_id: ''
     });
 
-    setSnackbarOpen(true);
-    setSeverity('success');
-    setSnackbarMessage('Feedback submitted successfully.');
-    setTimeout(() => {
-      navigate('/')
-    }, 2000);
+
 
   };
   const handleCloseSnackbar = () => {
@@ -216,7 +330,8 @@ const FeedbackForm = () => {
 
   //--------------------------------------destructure state--------------------------------//
   const { name, email, contact, question1, question2, question3, question4, question5, branch, otherbranch, cidacPrn, datetime } = formData;
-  const isSubmitDisabled = !email || !contact || !question1 || !question2 || !question3 || !question4 || !question5
+  const isSubmitDisabled = !email || !contact || !question1 || !question2 || !question3 || !question4 || !question5 || errors.contactError || errors.emailError
+    || errors.nameError || errors.otherBranchError || errors.pnrNoError || errors.questionError || errors.questionError2 || errors.questionError3 || errors.questionError4 || errors.questionError5
   // Rendering the form UI
   return (
     <Grid container justifyContent="center" alignItems="center" style={{ minHeight: '120vh', fontSize: '45px' }}>
@@ -228,52 +343,55 @@ const FeedbackForm = () => {
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label="Full Name"
+                  label={<span>Full name<span style={{ color: 'red' }}>*</span></span>}
                   name="name"
                   value={name}
                   onChange={handleChange}
                   onBlur={handleBlur}
                   variant="outlined"
                   size="small"
-                  required
+                  inputProps={{ maxLength: 40 }}
+
                   error={errors.nameError}
-                  helperText={errors.nameError && validation.errorText("Please enter a valid name") || "eg: john"}
+                  helperText={errors.nameError && validation.errorText("Invalid fullname")}
                 />
               </Grid>
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label="Email"
+                  label={<span>Email<span style={{ color: 'red' }}>*</span></span>}
                   name="email"
                   value={email}
                   onChange={handleChange}
                   onBlur={handleBlur}
                   variant="outlined"
+                  inputProps={{ maxLength: 30 }}
                   size="small"
-                  required
+
                   error={errors.emailError}
-                  helperText={errors.emailError && validation.errorText("Please enter a valid email") || 'eg: example123@gmail.com'}
+                  helperText={errors.emailError && validation.errorText("Invalid email")}
                 />
               </Grid>
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label="Contact"
+                  label={<span>Contact<span style={{ color: 'red' }}>*</span></span>}
                   name="contact"
                   value={contact}
                   onChange={handleChange}
                   onBlur={handleBlur}
                   variant="outlined"
                   size="small"
-                  required
+                  inputProps={{ maxLength: 10 }}
+
                   sx={{ mb: 1 }}
                   error={errors.contactError}
-                  helperText={errors.contactError && validation.errorText("Please enter a valid contact") || "eg: 9999999999"}
+                  helperText={errors.contactError && validation.errorText("Invalid contact")}
                 />
               </Grid>
               <Grid item xs={12}>
                 <FormControl fullWidth>
-                  <Typography style={{ fontSize: "18px" }} textAlign='start' variant="subtitle1" gutterBottom>Select Organization</Typography>
+                  <Typography style={{ fontSize: "18px" }} textAlign='start' variant="subtitle1" gutterBottom>Select Organization<span style={{ color: 'red' }}>*</span></Typography>
                   <RadioGroup
                     row
                     aria-label="organization"
@@ -286,9 +404,9 @@ const FeedbackForm = () => {
                     <FormControlLabel value="otherbranch" control={<Radio />} label="Other Branch" />
                   </RadioGroup>
 
-                  {formData.branch === 'Branch' &&
+                  {formData.branch === 'Branch' && (allBranch && allBranch.length > 1 ? (
                     <FormControl fullWidth>
-                      <InputLabel id="demo-simple-select-autowidth-label">Select Branch</InputLabel>
+                      <InputLabel id="demo-simple-select-autowidth-label">Select Branch </InputLabel>
                       <Select
                         labelId="demo-simple-select-autowidth-label"
                         id="demo-simple-select-autowidth-label"
@@ -308,7 +426,21 @@ const FeedbackForm = () => {
                         ))}
                       </Select>
 
-                    </FormControl>}
+                    </FormControl>)
+                    : (
+                      <TextField
+                        fullWidth
+                        size='small'
+                        value={selectedBranch || (allBranch[0] ? allBranch[0].branchName : '')}
+                        name='selectedBranch'
+                        label="Branch"
+                        InputProps={{
+                          readOnly: true,
+                        }}
+                      />
+                    ))}
+
+
 
 
                   {formData.branch === 'cdac' &&
@@ -318,9 +450,12 @@ const FeedbackForm = () => {
                       name="cidacPrn"
                       value={cidacPrn}
                       onChange={handleChange}
-
+                      onBlur={handleBlur}
+                      inputProps={{ maxLength: 20 }}
                       fullWvariant="outlined"
                       size="small"
+                      error={errors.pnrNoError}
+                      helperText={(errors.pnrNoError && validation.errorText("Invalid PRN No"))}
                     />
                   }
                   {formData.branch === 'otherbranch' &&
@@ -330,83 +465,104 @@ const FeedbackForm = () => {
                       name="otherbranch"
                       value={otherbranch}
                       onChange={handleChange}
-
+                      onBlur={handleBlur}
+                      inputProps={{ maxLength: 30 }}
                       variant="outlined"
                       size="small"
+                      error={errors.otherBranchError}
+                      helperText={(errors.otherBranchError && validation.errorText("Invalid other branch"))}
                     />
                   }
                 </FormControl>
               </Grid>
               <Grid item xs={12}>
-                <Typography textAlign="start" variant="subtitle1" gutterBottom>How satisfied are you with our services? (1-5)</Typography>
+                <Typography textAlign="start" variant="subtitle1" gutterBottom>How satisfied are you with our services?<span style={{ color: 'red' }}>*</span></Typography>
                 <TextField
 
                   fullWidth
-                  label="Rate from 1 to 5"
+                  label="Rate Us between 1 to 5"
                   name="question1"
                   value={question1}
                   onChange={handleChange}
                   onBlur={handleBlur}
                   variant="outlined"
                   size="small"
+                  inputProps={{ maxLength: 1 }}
                   required
                   error={errors.questionError}
-                  helperText={errors.questionError && validation.errorText("Please enter a valid question") || "eg: 1 to 5"}
+                  helperText={errors.questionError && validation.errorText("Invalid answer")}
                 />
               </Grid>
               <Grid item xs={12}>
-                <Typography textAlign="start" variant="subtitle1" gutterBottom>How likely are you to recommend us to others? (1-5)</Typography>
+                <Typography textAlign="start" variant="subtitle1" gutterBottom>How likely are you to recommend us to others?<span style={{ color: 'red' }}>*</span></Typography>
                 <TextField
                   fullWidth
-                  label="Rate from 1 to 5"
+                  label='Rate Us between 1 to 5'
                   name="question2"
                   value={question2}
                   onChange={handleChange}
                   onBlur={handleBlur}
+                  inputProps={{ maxLength: 1 }}
                   variant="outlined"
                   size="small"
                   required
                   error={errors.questionError2}
-                  helperText={errors.questionError2 && validation.errorText("Please enter a valid question") || "eg: 1to5"}
+                  helperText={errors.questionError2 && validation.errorText("Invalid answer")}
                 />
               </Grid>
               <Grid item xs={12}>
-                <Typography textAlign="start" variant="subtitle1" gutterBottom >What do you like most about our services?</Typography>
+                <Typography textAlign="start" variant="subtitle1" gutterBottom >What do you like most about our services?<span style={{ color: 'red' }}>*</span></Typography>
                 <TextField
                   fullWidth
                   label="Your answer"
                   name="question3"
                   value={question3}
                   onChange={handleChange}
+                  onBlur={handleBlur}
+                  inputProps={{ maxLength: 500 }}
                   variant="outlined"
                   size="small"
                   required
+                  multiline
+                  rows={4}
+                  error={errors.questionError3}
+                  helperText={errors.questionError3 && validation.errorText("Invalid answer,Max:500 characters")}
                 />
               </Grid>
               <Grid item xs={12}>
-                <Typography textAlign="start" variant="subtitle1" gutterBottom>What areas do you think we can improve?</Typography>
+                <Typography textAlign="start" variant="subtitle1" gutterBottom>What areas do you think we can improve?<span style={{ color: 'red' }}>*</span></Typography>
                 <TextField
                   fullWidth
                   label="Your answer"
                   name="question4"
                   value={question4}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                   variant="outlined"
                   size="small"
                   required
+                  multiline
+                  rows={4}
+                  error={errors.questionError4}
+                  helperText={errors.questionError4 && validation.errorText("Invalid answer,Max:500 characters")}
                 />
               </Grid>
               <Grid item xs={12}>
-                <Typography textAlign="start" variant="subtitle1" gutterBottom>Any additional comments or suggestions?</Typography>
+                <Typography textAlign="start" variant="subtitle1" gutterBottom>Any additional comments or suggestions?<span style={{ color: 'red' }}>*</span></Typography>
                 <TextField
                   fullWidth
                   label="Your answer"
                   name="question5"
                   value={question5}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                   variant="outlined"
                   size="small"
                   required
+                  multiline
+                  rows={4}
+                  error={errors.questionError5}
+                  helperText={errors.questionError5 && validation.errorText("Invalid answer,Max:500 characters")}
                 />
               </Grid>
               <Grid item xs={12}>

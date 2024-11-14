@@ -17,6 +17,9 @@ export default function SubmitExam() {
   //   // Clear the timeout if the component unmounts
   //   return () => clearTimeout(timeoutId);
   // }, []);
+  const goToFeedbackForm=()=>{
+    navigate('/student-feedback')
+  }
 
   return (
         <> 
@@ -32,7 +35,7 @@ export default function SubmitExam() {
       </CardContent>
     </Card>
     <Typography align="center" variant="body2" color="secondary" sx={{ marginTop: 3 }}>
-            <Link href="#" onClick={() => navigate('/student-feedback')} underline="hover"
+            <Link onClick={goToFeedbackForm} underline="hover"
             sx={{ fontSize: '1.2rem', fontWeight: 'bold' }}>
               Click here to give feedback
             </Link>

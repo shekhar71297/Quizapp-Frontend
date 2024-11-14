@@ -264,16 +264,28 @@ function BatchWiseStudent() {
       employeeId: state.employeeId,
     };
     Post(urls.staff, payload)
-      .then(response => dispatch(userActions.addUser(response.data)))
-      .catch(error => console.log("user error: ", error))
+      .then(response =>{
+        if(response?.status === 200 || response.statu === 201){
+          setState((prevState) => ({
+            ...prevState,
+            snackbarOpen: true,
+            snackbarMessage: 'User successfully registered.',
+            severity: 'success',
+          }));
+          dispatch(userActions.addUser(response.data))
+        } 
+      })
+      .catch(error => {
+        setState((prevState) => ({
+          ...prevState,
+          snackbarOpen: true,
+          snackbarMessage: error?.message,
+          severity: 'error',
+        }))
+      })
+   
 
-
-    setState((prevState) => ({
-      ...prevState,
-      snackbarOpen: true,
-      snackbarMessage: 'User successfully registered.',
-      severity: 'success',
-    }));
+    
 
     setTimeout(() => {
       nav('/')

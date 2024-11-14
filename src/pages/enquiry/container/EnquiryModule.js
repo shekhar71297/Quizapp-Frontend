@@ -12,7 +12,7 @@ import {
   TextField, Grid, MenuItem,
   Typography, InputLabel,
   CardContent, Card,
-	Tooltip,
+  Tooltip,
 } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
@@ -88,7 +88,7 @@ const EnquiryModule = () => {
   // Update form fields when emp state changes
   useEffect(() => {
     if (singleEnquiry) {
-      const { id, fname, lname, email,message,status,mobile } = singleEnquiry;
+      const { id, fname, lname, email, message, status, mobile } = singleEnquiry;
       setId(id);
       setFname(fname);
       setLname(lname);
@@ -214,13 +214,22 @@ const EnquiryModule = () => {
 
     const id = recordToDeleteId;
     Delete(`${urls.enquiry}${id}`)
-      .then(response => dispatch(enquiryActions.deleteEnquiry(id)))
-      .catch(error => console.log("enquiry error: ", error));
+      .then(response => {
+        if (response?.status === 200 || response?.status === 201) {
+          setSnackbarOpen(true);
+          setSnackbarMessage('Enquiry deleted successfully');
+          setSeverity('success');
+          dispatch(enquiryActions.deleteEnquiry(id))
+        }
+      })
+      .catch(error => {
+        setSnackbarOpen(true);
+        setSnackbarMessage(error?.message);
+        setSeverity('error');
+      });
 
     closeConfirmDialog();
-    setSnackbarOpen(true);
-    setSnackbarMessage('Enquiry deleted successfully');
-    setSeverity('error');
+
   };
   // Delete data handler
   const deletedata = (id) => {
@@ -274,23 +283,39 @@ const EnquiryModule = () => {
       // addEmployeeRequest(empObj);
       Post(urls.enquiry, enqObj)
         .then(response => {
-          const reverseEmp = [response.data].reverse();
-          dispatch(enquiryActions.addEnquiry(reverseEmp));
+          if (response?.status === 200 || response?.status === 201) {
+            setSnackbarOpen(true);
+            setSnackbarMessage('enquiry added successfully.');
+            setSeverity("success");
+            const reverseEmp = [response?.data].reverse();
+            dispatch(enquiryActions.addEnquiry(reverseEmp));
+          }
         })
-        .catch(error => console.log("employee error: ", error));
-      setSnackbarOpen(true);
-      setSnackbarMessage('enquiry added successfully.');
-      setSeverity("success");
+        .catch(error => {
+          setSnackbarOpen(true);
+          setSnackbarMessage(error?.message);
+          setSeverity("true");
+        });
+
 
     } else {
       // Update existing employee
       enqObj['id'] = id;
       Put(`${urls.enquiry}${enqObj.id}/`, enqObj)
-        .then(response => dispatch(enquiryActions.updateEnquiry(response.data)))
-        .catch(error => console.log("enquiry error: ", error));
-      setSnackbarOpen(true);
-      setSnackbarMessage('enquiry updated successfully.');
-      setSeverity("success");
+        .then(response => {
+          if (response?.status === 200 || response?.status === 201) {
+          setSnackbarOpen(true);
+          setSnackbarMessage('enquiry updated successfully.');
+          setSeverity("success");
+          dispatch(enquiryActions.updateEnquiry(response?.data))
+          }
+        })
+        .catch(error => {
+          setSnackbarOpen(true);
+          setSnackbarMessage(error?.message);
+          setSeverity("error");
+        });
+
     }
 
     handleClose();
@@ -314,8 +339,8 @@ const EnquiryModule = () => {
 
     return fnameIncludes || lnameIncludes || emailIncludes || statusIncludes || dateIncludes || mobileIncludes;
   });
-	console.log(allEnquiry);
-	
+  console.log(allEnquiry);
+
 
   return (
     <>
@@ -364,8 +389,8 @@ const EnquiryModule = () => {
               <TableHead style={{ overflow: 'auto' }}>
                 <TableRow>
                   <TableCell align="left"><Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>Sr No</Typography></TableCell>
-									<TableCell align="left"><Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>Date</Typography></TableCell>
-									<TableCell align="left"><Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>Full Name</Typography></TableCell>
+                  <TableCell align="left"><Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>Date</Typography></TableCell>
+                  <TableCell align="left"><Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>Full Name</Typography></TableCell>
                   <TableCell align="left"><Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>Mobile no</Typography></TableCell>
                   <TableCell align="left"><Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>status</Typography></TableCell>
                   <TableCell align="center"><Typography component="span" variant="subtitle1" sx={{ fontWeight: 'bold' }}>Action</Typography></TableCell>
@@ -383,21 +408,21 @@ const EnquiryModule = () => {
                     const currentIndex = page * rowsPerPage + index + 1;
                     return (
                       <TableRow key={index}>
-                        <TableCell  component="th" align="left" scope="row">{currentIndex}</TableCell>
-												<TableCell  className="tablebody" align="left">{formatDate(data.enquiryDate)}</TableCell>
-                        <TableCell  className="tablebody" align="left">{capitalizeFirstLetter(data.fname) + ' ' + capitalizeFirstLetter(data.lname)}</TableCell >
-                        <TableCell  className="tablebody" align="left">{data.mobile}</TableCell>
-                        <TableCell  className="tablebody" align="left">{capitalizeFirstLetter(data.status)}</TableCell>
-                        
+                        <TableCell component="th" align="left" scope="row">{currentIndex}</TableCell>
+                        <TableCell className="tablebody" align="left">{formatDate(data.enquiryDate)}</TableCell>
+                        <TableCell className="tablebody" align="left">{capitalizeFirstLetter(data.fname) + ' ' + capitalizeFirstLetter(data.lname)}</TableCell >
+                        <TableCell className="tablebody" align="left">{data.mobile}</TableCell>
+                        <TableCell className="tablebody" align="left">{capitalizeFirstLetter(data.status)}</TableCell>
+
                         <TableCell className="tablebody" align="center" >
                           <IconButton aria-label="logout"  >
                             <EditIcon onClick={() => (handleOpen(data.id))} style={{ color: '#2c387e', fontSize: '18px' }} />
                           </IconButton>
-													<Tooltip title="See Message">
-                          <IconButton aria-label="visible"  >
-                            <VisibilityIcon onClick={() => handleopenDetails(data)} style={{ color: '#2c387e', fontSize: '18px' }} />
-                          </IconButton>
-													</Tooltip>
+                          <Tooltip title="See Message">
+                            <IconButton aria-label="visible"  >
+                              <VisibilityIcon onClick={() => handleopenDetails(data)} style={{ color: '#2c387e', fontSize: '18px' }} />
+                            </IconButton>
+                          </Tooltip>
                           <IconButton aria-label="logout"  >
                             <DeleteIcon onClick={() => deletedata(data.id)} style={{ color: '#2c387e', fontSize: '18px' }} />
                           </IconButton>
@@ -451,13 +476,13 @@ const EnquiryModule = () => {
                     size='small'
                     type="text"
                     value={fname}
-										InputProps={{
-											readOnly: true, // This makes the field read-only.
-										}}
+                    InputProps={{
+                      readOnly: true, // This makes the field read-only.
+                    }}
                     onChange={handleChange}
                     onBlur={handleBlur}
                     error={errors.fnameError}
-                    helperText={errors.fnameError && validation.errorText("Please enter a valid first name") || 'eg:John'}
+                    helperText={errors.fnameError && validation.errorText("Invalid First Name")}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -470,13 +495,13 @@ const EnquiryModule = () => {
                     name="lname"
                     size='small'
                     value={lname}
-										InputProps={{
-											readOnly: true, // This makes the field read-only.
-										}}
+                    InputProps={{
+                      readOnly: true, // This makes the field read-only.
+                    }}
                     onChange={handleChange}
                     onBlur={handleBlur}
                     error={errors.lnameError}
-                    helperText={errors.lnameError && validation.errorText("Please enter a valid last name") || 'eg: Dev'}
+                    helperText={errors.lnameError && validation.errorText("Invalid Last Name")}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -489,13 +514,13 @@ const EnquiryModule = () => {
                     name="email"
                     size='small'
                     value={email}
-										InputProps={{
-											readOnly: true, // This makes the field read-only.
-										}}
+                    InputProps={{
+                      readOnly: true, // This makes the field read-only.
+                    }}
                     onChange={handleChange}
                     onBlur={handleBlur}
                     error={errors.emailError}
-                    helperText={errors.emailError && validation.errorText("Please enter a valid Email") || 'eg: John1@gmail.com'}
+                    helperText={errors.emailError && validation.errorText("Invalid Email")}
                   />
                 </Grid>
 
@@ -508,14 +533,14 @@ const EnquiryModule = () => {
                     type="tel"
                     name="mobile"
                     value={mobile}
-										aria-readonly InputProps={{
-											readOnly: true, // This makes the field read-only.
-										}}
+                    aria-readonly InputProps={{
+                      readOnly: true, // This makes the field read-only.
+                    }}
                     size='small'
                     onChange={handleChange}
                     onBlur={handleBlur}
                     error={errors.contactError}
-                    helperText={errors.contactError && validation.errorText("Please enter a valid contact") || 'eg: 8888888888'}
+                    helperText={errors.contactError && validation.errorText("Invalid Contact")}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -528,13 +553,13 @@ const EnquiryModule = () => {
                     type='text'
                     size='small'
                     value={message}
-										InputProps={{
-											readOnly: true, // This makes the field read-only.
-										}}
+                    InputProps={{
+                      readOnly: true, // This makes the field read-only.
+                    }}
                     onChange={handleChange}
                   />
                 </Grid>
-								<Grid item xs={12}>
+                <Grid item xs={12}>
                   <TextField
                     select
                     margin="normal"
@@ -551,10 +576,10 @@ const EnquiryModule = () => {
                     <MenuItem value="pending">Pending</MenuItem>
                     <MenuItem value="contacted">Contacted</MenuItem>
                     <MenuItem value="no answer">No Answer</MenuItem>
-										<MenuItem value="busy">Busy</MenuItem>
+                    <MenuItem value="busy">Busy</MenuItem>
                     <MenuItem value="wrong number">Wrong Number</MenuItem>
                     <MenuItem value="Follow-Up Needed">Follow-Up Needed</MenuItem>
-										<MenuItem value="Customer Unreachable">Customer Unreachable</MenuItem>
+                    <MenuItem value="Customer Unreachable">Customer Unreachable</MenuItem>
                     <MenuItem value="wrong number">Wrong Number</MenuItem>
                     <MenuItem value="disconnected">Disconnected</MenuItem>
                   </TextField>
@@ -602,28 +627,28 @@ const EnquiryModule = () => {
                   gap: 2,
                 }}>
                   <Typography component="div" variant="subtitle1" sx={{
-                      fontSize: isSmallScreen ? '14px' : '18px', p: 2,
-                      borderRadius: 3,
-                      bgcolor: 'background.default',
-                      display: 'grid',
-                      gap: 0,
-                      maxWidth: '800px',
-                      marginTop: 1
-                    }}>
+                    fontSize: isSmallScreen ? '14px' : '18px', p: 2,
+                    borderRadius: 3,
+                    bgcolor: 'background.default',
+                    display: 'grid',
+                    gap: 0,
+                    maxWidth: '800px',
+                    marginTop: 1
+                  }}>
                     <div> <strong>Full Name:</strong> {capitalizeFirstLetter(selectedUserdetail.fname)} {capitalizeFirstLetter(selectedUserdetail.lname)}</div>
-										<div><strong>Email:</strong> {selectedUserdetail.email} </div>
-                    </Typography>  
-                
-                    <Typography component="div" variant="subtitle1" sx={{
-                      fontSize: isSmallScreen ? '14px' : '18px', p: 2,
-                      borderRadius: 3,
-                      bgcolor: 'background.default',
-                      display: 'grid',
-                      gap: 0,
-                      maxWidth: '800px',
-                      boxShadow: 4,
-                    }}><div> <strong>Message:</strong> {capitalizeFirstLetter(selectedUserdetail.message)} </div>
-                    </Typography>
+                    <div><strong>Email:</strong> {selectedUserdetail.email} </div>
+                  </Typography>
+
+                  <Typography component="div" variant="subtitle1" sx={{
+                    fontSize: isSmallScreen ? '14px' : '18px', p: 2,
+                    borderRadius: 3,
+                    bgcolor: 'background.default',
+                    display: 'grid',
+                    gap: 0,
+                    maxWidth: '800px',
+                    boxShadow: 4,
+                  }}><div> <strong>Message:</strong> {capitalizeFirstLetter(selectedUserdetail.message)} </div>
+                  </Typography>
                 </Box>
               </Grid>
 
