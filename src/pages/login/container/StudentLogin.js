@@ -36,7 +36,7 @@ export default function Login() {
   const [snackbarMessage, setSnackbarMessage] = React.useState('');
   const [snackbarSeverity, setSnackbarSeverity] = React.useState('info');
   const [passwordVisibility, setPasswordVisibility] = React.useState(false);
-  const { allUser } = useSelector((store) => store.user);
+  const { loginUser } = useSelector((store) => store.user);
   const { token } = useSelector((store) => store.login);
   const dispatch = useDispatch();
   const nav = useNavigate();
@@ -49,62 +49,61 @@ export default function Login() {
     emailError: false,
     passwordError: false,
   });
+  const [user, setUser] = useState(null);
 
-  useEffect(() => {
-    Get(`${urls.user}`)
-      .then((response) => {
-        const reversedUsers = response.data.reverse(); // Reverse the array of users
-        dispatch(userActions.getUser(reversedUsers));
-      })
-      .catch((error) => console.log('user error: ', error));
-  }, []);
+  // useEffect(() => {
+  //   Get(`${urls.user}`)
+  //     .then((response) => {
+  //       const reversedUsers = response.data.reverse(); // Reverse the array of users
+  //       dispatch(userActions.getUser(reversedUsers));
+  //     })
+  //     .catch((error) => console.log('user error: ', error));
+  // }, []);
 
   //-------------------------------------handle submit------------------------------------//
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-
     const data = new FormData(event.currentTarget);
     const loginData = {
       email: data.get('email'),
       password: data.get('password'),
     };
+
     if (loginData.email === '' && loginData.password === '') {
       handleSnackbarOpen('Please enter login credentials', 'error');
       return;
     }
-    const user = allUser.find((user) => user.email === loginData.email.toLowerCase());
-   
 
-    // Login successful, save user details to session storage
-    const firstName = capitalizeFirstLetter(user?.fname);
-    const lastName = capitalizeFirstLetter(user?.lname);
-    sessionStorage.setItem('user', firstName + ' ' + lastName);
-    sessionStorage.setItem('role', user?.role);
-    sessionStorage.setItem('studentId', user?.id)
+    try {
+      // Post login data to obtain access token
+      const loginResponse = await Post(`${urls.token}`, loginData);
+      console.log(loginResponse);
+      
+      if (loginResponse?.access) {
+        
+        handleSnackbarOpen('Login successful', 'success');
+        sessionStorage.setItem('accessToken', loginResponse.access);
+        dispatch(loginActions.LOGIN_SUCCESS(loginResponse.access));
 
-
-    Post(`${urls.token}`, loginData)
-      .then((response) => {
-        if (response?.access) {
-          handleSnackbarOpen('Login successful', 'success'); 
-          setTimeout(() => {       
-          sessionStorage.setItem('accessToken', response?.access);
-          dispatch(loginActions.LOGIN_SUCCESS(response?.access));
-          // Redirect based on user role
-         
-            if (user.role === 'student' || user.role === 'intern') {
-              nav('/quizapp');
-            } else if (user.role === 'trainer' || user.role === 'counsellor') {
-              nav('/dashboard/exam');
-            } else {
-              nav('/dashboard/student');
-            }
-          }, 2000)
-        }
-      })
-      .catch((error) => { 
-        handleSnackbarOpen(error?.response?.data?.detail, 'error');
-      });
+        // Fetch additional user data from /loginuser
+        const userDataResponse = await Get(`${urls.loginUser}`);
+        setUser(userDataResponse?.data); // Store user data in state
+        setTimeout(() => {
+          // Redirect based on role if user data is successfully fetched
+          const role = userDataResponse?.data?.role;
+          if (role === 'student' || role === 'intern') {
+            nav('/quizapp');
+          } else if (role === 'trainer' || role === 'counsellor') {
+            nav('/dashboard/exam');
+          } else {
+            nav('/dashboard/student');
+          }
+        }, 2000);
+      }
+    
+    } catch (error) {
+      handleSnackbarOpen(error?.response?.data?.detail || 'Login failed', 'error');
+    }
   };
 
   const handleSnackbarClose = (event, reason) => {
@@ -144,7 +143,7 @@ export default function Login() {
   };
   const handleBlur = (event) => {
     const { name, value } = event.target;
-    if (name === 'password' ) {
+    if (name === 'password') {
       const isPasswordError = !validation.isValidPassword(value);
       setErrors((prevErrors) => ({
         ...prevErrors,

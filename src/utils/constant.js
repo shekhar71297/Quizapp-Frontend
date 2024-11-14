@@ -22,7 +22,8 @@ export const urls = {
   sendEmail:'/api/send-email/',
   course:'/api/course/',
   enquiry:'/api/enquiry/',
-  enroll:'/api/enroll/'
+  enroll:'/api/enroll/',
+  loginUser:'/api/user/me/'
 };
 
 //-------------------------Validation Regx----------------------//

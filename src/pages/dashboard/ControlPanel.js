@@ -40,6 +40,7 @@ import { feedbackAnsActions } from '../trainerFeedback/trainerSliceReducer';
 import { Get } from '../../services/Http.Service';
 import { urls } from '../../utils/constant';
 import { useEffect } from 'react';
+import { userActions } from '../user/userSliceReducer';
 
 
 const drawerWidth = 240;
@@ -117,16 +118,29 @@ const ControlPanel = () => {
   const [open, setOpen] = React.useState(true);
   const [showAlert, setShowAlert] = React.useState(false);
   const [ShowScheduledAlert, setShowScheduledAlert] = React.useState(false);
-
+  const { loginUser } = useSelector((store) => store.user);
+  const dispatch = useDispatch();
   const [alertMessage, setAlertMessage] = React.useState('');
   const [alertSeverity, setAlertSeverity] = React.useState('info');
   const navigate = useNavigate();
   const location = useLocation();
-  const isRole = sessionStorage.getItem("role") === "admin";
-  const isCounsellor = sessionStorage.getItem("role") === "counsellor"
-  const role = sessionStorage.getItem('role')
-  const userName = sessionStorage.getItem("user");
-  // const dispatch = useDispatch();
+ 
+
+  useEffect(() => {
+    Get(`${urls.loginUser}`)
+      .then((response) => {
+        dispatch(userActions.GetLogginUser(response.data));
+      })
+      .catch((error) => console.log('user error: ', error));
+  }, []);
+ 
+  
+  const isRole =  loginUser?.role === "admin";
+  const isCounsellor = loginUser?.role === "counsellor"
+  const role = loginUser?.role;
+  const userName = `${loginUser?.fname} ${loginUser?.lname}`;
+
+ 
   // const { allScheduledFeedback, } = useSelector((store) => store.feedbackAns);
   // const [sentEmail, setSentEmail] = React.useState(false);
   // const [currentDate, setCurrentDate] = React.useState(new Date().toISOString().slice(0, 10));
