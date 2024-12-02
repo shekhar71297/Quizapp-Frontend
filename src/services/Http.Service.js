@@ -8,14 +8,15 @@ export const axiosHttp = axios.create({
 });
 
 // create intercepter for request
-axiosHttp.interceptors.request.use(
+axiosHttp.interceptors.request.use( 
+    //function that will be called for every outgoing request.
     (config) => {
         const token = !!sessionStorage.getItem("accessToken");//removeItem('jwt'),setItem('jwt','sdasdsad')
         return {
-            ...config,
+            ...config, //It spreads the existing config properties.
             headers: {
-                ...(token && { 'Authorization': `Bearer ${sessionStorage.getItem("accessToken")}` }),
-                ...config.headers,
+                ...(token && { 'Authorization': `Bearer ${sessionStorage.getItem("accessToken")}` }),//If the token is available (i.e., token is true), it adds an Authorization header with the token formatted as Bearer <token>.
+                ...config.headers, //existing headers
             }
         }
     },
@@ -29,10 +30,10 @@ axiosHttp.interceptors.request.use(
 
 axiosHttp.interceptors.response.use(
     (response) => {
-        return response.data
+        return response.data //Extract and return only `response.data`
     },
     (error) => {
-        return Promise.reject(error)
+        return Promise.reject(error)  // Forward errors to the caller
     }
 );
 
