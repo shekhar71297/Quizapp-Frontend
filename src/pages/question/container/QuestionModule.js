@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import Papa from 'papaparse';
+import * as XLSX from 'xlsx'; // Import XLSX
+
 import {
   TextField,
   Button,
@@ -127,7 +130,7 @@ const QuestionModule = () => {
         level: question.level,
         exam_id: selectedExam
       }));
-      console.log(selectedExam);
+     
 
       // Set the exam name for generating file name
       const selectedExamObject = allExam.find(exam => exam.id === selectedExam);
@@ -232,7 +235,7 @@ const QuestionModule = () => {
     if (questionImage) {
       formData.append('questionImage', questionImage);
     }
-    console.log('formData', formData);
+  
 
     Post(urls.question, formData)
       .then((response) => {
@@ -376,36 +379,135 @@ const QuestionModule = () => {
       })
       .catch((error) => {
         setErrorSnackbarOpen(true)
-        setErrorMessage(error?.message)
+        setErrorMessage(error?.response?.data?.message)
       });
 
   };
   // -------------------------------File upload------------------------------//
-  const handleFileSubmit = () => {
-    if (!selectedFile) {
-      setErrorSnackbarOpen(true); // Open the error snackbar if no file is selected
-      setErrorMessage('Please select a file to upload.');
-      return;
-    }
+ const handleFileSubmit = () => {
+  if (!selectedFile) {
+    setErrorSnackbarOpen(true); // Open the error snackbar if no file is selected
+    setErrorMessage('Please select a file to upload.');
+    return;
+  }
 
-    const formData = new FormData();
-    formData.append('file', selectedFile); // Use 'file' as the field name
-    formData.append('Content-Type', 'multipart/form-data'); // Set content type for file upload
+  const formData = new FormData();
+  formData.append('file', selectedFile);
 
-    Post(urls.upload_csv, formData)
-      .then((response) => {
-        if(response?.status === 200 || response?.status===201){
-          setSuccessSnackbarOpen(true);
-          setSnackbarMessage('File uploaded !')
-          dispatch(questionActions.addCsvFile(response.data));
-        }
-      })
-      .catch((error) => {
-        console.error(error); // Log error for debugging or display an error message to the user
-        setErrorSnackbarOpen(true); // Open the error snackbar
-        setErrorMessage(error?.message);
-      });
-  };
+  // Use PapaParse to parse the CSV file
+  Papa.parse(selectedFile, {
+    complete: (result) => {
+  
+
+      // If the result has errors, prevent API call and show error
+      if (result.errors && result.errors.length > 0) {
+        setErrorSnackbarOpen(true);
+        setErrorMessage('There was an error with the file format.');
+        return; // Early return to prevent the API call
+      }
+
+      // Proceed only if there are no parsing errors
+      if (result.data && result.data.length > 0) {
+        // File is successfully parsed, call the Post API to upload the file
+        Post(urls.upload_csv, formData)
+          .then((response) => {
+            if (response?.status === 200 || response?.status === 201) {
+              setSuccessSnackbarOpen(true);
+              setSnackbarMessage('File uploaded successfully!');
+              dispatch(questionActions.addCsvFile(response.data));
+            }
+          })
+          .catch((error) => {
+            console.error(error);
+            setErrorSnackbarOpen(true);
+            setErrorMessage(error?.response?.data?.message || 'An error occurred during file upload.');
+          });
+      } else {
+        setErrorSnackbarOpen(true);
+        setErrorMessage('No valid data found in the file.');
+      }
+    },
+    error: (error) => {
+      console.error(error);
+      setErrorSnackbarOpen(true);
+      setErrorMessage('Error parsing the CSV file.');
+    },
+  });
+};
+
+
+//   if (!selectedFile) {
+//     setErrorSnackbarOpen(true); // Open the error snackbar if no file is selected
+//     setErrorMessage('Please select a file to upload.');
+//     return;
+//   }
+
+//   const formData = new FormData();
+//   formData.append('file', selectedFile);
+
+//   // Use PapaParse to parse the CSV file
+//   Papa.parse(selectedFile, {
+//     complete: (result) => {
+//       console.log('Parsed result:', result); // Check the parsed content
+      
+//       // Validate the parsed data, you can customize this based on your use case
+//       if (result.errors.length) {
+//         setErrorSnackbarOpen(true);
+//         setErrorMessage('There was an error with the file format.');
+//         return;
+//       }
+
+//       // Process valid CSV data here
+//       Post(urls.upload_csv, formData)
+//         .then((response) => {
+//           if (response?.status === 200 || response?.status === 201) {
+//             setSuccessSnackbarOpen(true);
+//             setSnackbarMessage('File uploaded!');
+//             dispatch(questionActions.addCsvFile(response.data));
+//           }
+//         })
+//         .catch((error) => {
+//           console.error(error);
+//           setErrorSnackbarOpen(true);
+//           setErrorMessage(error?.response?.data?.message);
+//         });
+//     },
+//     error: (error) => {
+//       console.error(error);
+//       setErrorSnackbarOpen(true);
+//       setErrorMessage('Error parsing CSV file.');
+//     },
+//   });
+// };
+
+
+
+
+  // const handleFileSubmit = () => {
+  //   if (!selectedFile) {
+  //     setErrorSnackbarOpen(true); // Open the error snackbar if no file is selected
+  //     setErrorMessage('Please select a file to upload.');
+  //     return;
+  //   }
+
+  //   const formData = new FormData();
+  //   formData.append('file', selectedFile); // Use 'file' as the field name
+  //   formData.append('Content-Type', 'multipart/form-data'); // Set content type for file upload
+
+  //   Post(urls.upload_csv, formData)
+  //     .then((response) => {
+  //       if(response?.status === 200 || response?.status===201){
+  //         setSuccessSnackbarOpen(true);
+  //         setSnackbarMessage('File uploaded !')
+  //         dispatch(questionActions.addCsvFile(response.data));
+  //       }
+  //     })
+  //     .catch((error) => {
+  //       console.error(error); // Log error for debugging or display an error message to the user
+  //       setErrorSnackbarOpen(true); // Open the error snackbar
+  //       setErrorMessage(error?.message);
+  //     });
+  // };
 
   //-------------------------------------Export csv----------------------------//
   const handleExportCSV = () => {
@@ -446,7 +548,7 @@ const QuestionModule = () => {
   const isSubmitDisabled = !question || !option1 || !option2 || !answer || !marks || !isValidFileSize || !level;
 
   const filteredQuestions = allquestions && allquestions.length > 0 && allquestions.filter((question) => question?.exam?.id === selectedExam);
-  console.log(filteredQuestions);
+  
   const questionLevels = ['simple', 'intermediate', 'complex'];
   return (
     <>

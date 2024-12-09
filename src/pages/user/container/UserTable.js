@@ -290,7 +290,7 @@ const Usertable = () => {
     }
   };
 
-  const filteredStudents = allUser.filter(data => data.role === 'student' || data.role === 'intern')
+  const filteredStudents = allUser.filter(data => data?.role === 'student' || data?.role === 'intern')
   const filteredUsers = filteredStudents.filter((data) => {
 
     const query = searchQuery.toLowerCase(); // Ensure searchQuery is used after initialization

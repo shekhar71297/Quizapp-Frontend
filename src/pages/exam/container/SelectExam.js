@@ -37,7 +37,9 @@ function SelectExam() {
       const reversedexam = response.data.reverse(); // Reverse the array of users
       dispatch(examActions.GET_EXAM(reversedexam));
     })
-      .catch(error => console.log("Exam error: ", error));
+      .catch(error =>{
+        openSnackbar(`${error?.name}-${error?.message}`);
+      });
   }, []);
 
   const activeExams = allExam.filter(exam => exam.examStatus);
@@ -46,7 +48,7 @@ function SelectExam() {
     setExamId(parseInt(event.target.value, 10));
   };
   const filterresult = allExam.some(exam => exam.id == examId && exam.showResult== true)
-  console.log(filterresult);
+
   const openSnackbar = (message) => {
     setSnackbarMessage(message);
     setSnackbarOpen(true);

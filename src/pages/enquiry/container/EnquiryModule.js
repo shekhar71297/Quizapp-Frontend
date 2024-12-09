@@ -82,7 +82,11 @@ const EnquiryModule = () => {
         const reversedEmployee = response.data.reverse();
         dispatch(enquiryActions.getEnquiry(reversedEmployee));
       })
-      .catch(error => console.log("enquiry error: ", error));
+      .catch(error => {
+        setSnackbarOpen(true);
+        setSnackbarMessage(`${error?.name}-${error?.message}`);
+        setSeverity('error');
+      });
   }, []);
 
   // Update form fields when emp state changes
@@ -339,7 +343,6 @@ const EnquiryModule = () => {
 
     return fnameIncludes || lnameIncludes || emailIncludes || statusIncludes || dateIncludes || mobileIncludes;
   });
-  console.log(allEnquiry);
 
 
   return (
@@ -482,7 +485,7 @@ const EnquiryModule = () => {
                     onChange={handleChange}
                     onBlur={handleBlur}
                     error={errors.fnameError}
-                    helperText={errors.fnameError && validation.errorText("Invalid First Name")}
+                    helperText={errors.fnameError && validation.errorText("Enter Valid First Name")}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -501,7 +504,7 @@ const EnquiryModule = () => {
                     onChange={handleChange}
                     onBlur={handleBlur}
                     error={errors.lnameError}
-                    helperText={errors.lnameError && validation.errorText("Invalid Last Name")}
+                    helperText={errors.lnameError && validation.errorText("Enter Valid Last Name")}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -520,7 +523,7 @@ const EnquiryModule = () => {
                     onChange={handleChange}
                     onBlur={handleBlur}
                     error={errors.emailError}
-                    helperText={errors.emailError && validation.errorText("Invalid Email")}
+                    helperText={errors.emailError && validation.errorText("Enter Valid Email")}
                   />
                 </Grid>
 
@@ -540,7 +543,7 @@ const EnquiryModule = () => {
                     onChange={handleChange}
                     onBlur={handleBlur}
                     error={errors.contactError}
-                    helperText={errors.contactError && validation.errorText("Invalid Contact")}
+                    helperText={errors.contactError && validation.errorText("Enter Valid Contact")}
                   />
                 </Grid>
                 <Grid item xs={12}>

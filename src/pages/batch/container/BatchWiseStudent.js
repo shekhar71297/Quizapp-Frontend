@@ -83,7 +83,14 @@ function BatchWiseStudent() {
       const reversedexam = response.data.reverse(); // Reverse the array of users
       dispatch(staffActions.getEmployee(reversedexam));
     })
-      .catch(error => console.log("user error: ", error));
+      .catch(error => {
+        setState((prevState) => ({
+          ...prevState,
+          snackbarOpen: true,
+          snackbarMessage: `${error?.name}-${error?.message}`,
+          severity: 'error',
+        }));
+      });
   }, [])
 
   useEffect(() => {
@@ -92,7 +99,14 @@ function BatchWiseStudent() {
       const reversedexam = response.data.reverse(); // Reverse the array of users
       dispatch(userActions.getUser(reversedexam));
     })
-      .catch(error => console.log("user error: ", error));
+      .catch(error => {
+        setState((prevState) => ({
+          ...prevState,
+          snackbarOpen: true,
+          snackbarMessage: `${error?.name}-${error?.message}`,
+          severity: 'error',
+        }));
+      });
   }, [])
 
 
