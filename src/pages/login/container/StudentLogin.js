@@ -238,7 +238,7 @@ export default function Login() {
               inputProps={{ maxLength: 30 }}
               size='small'
               error={errors.emailError}
-              helperText={(errors.emailError && validation.errorText("Invalid email"))}
+              helperText={(errors.emailError && validation.errorText("Enter valid email"))}
             />
             <TextField
               margin='normal'
@@ -253,7 +253,7 @@ export default function Login() {
               size='small'
               onBlur={handleBlur}
               error={errors.passwordError}
-              helperText={(errors.passwordError && validation.errorText("Invalid password"))}
+              helperText={(errors.passwordError && validation.errorText("Enter valid password"))}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position='end'>

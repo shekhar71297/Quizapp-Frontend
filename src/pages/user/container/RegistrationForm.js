@@ -127,31 +127,158 @@ const RegistrationForm = () => {
     }
   }, [selectedBranch, allBranch]);
 
+  // const handleChange = (event) => {
+  //   const { name, value } = event.target;
+  //   if (name === 'selectedBranch') {
+  //     setSelectedBranch(value); // Update selectedBranch with the new value
+  //     console.log(selectedBranch);
+  //     const selectedBranchObject = allBranch.find(branch => branch.id === value);
+  //     const branchId = selectedBranchObject ? selectedBranchObject.id : ''; // Get the branch id from the selected branch object
+  //     console.log(branchId);
 
+  //     setFormData({
+  //       ...formData,
+  //       branch_id: branchId, // Update branch_id in formData
+  //     });
+  //   } else {
+  //     setFormData({
+  //       ...formData,
+  //       [name]: value,
+  //     });
+  //   }
 
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    if (name === 'selectedBranch') {
-      setSelectedBranch(value); // Update selectedBranch with the new value
-      console.log(selectedBranch);
-      const selectedBranchObject = allBranch.find(branch => branch.id === value);
-      const branchId = selectedBranchObject ? selectedBranchObject.id : ''; // Get the branch id from the selected branch object
-      console.log(branchId);
+  // };
 
-      setFormData({
-        ...formData,
-        branch_id: branchId, // Update branch_id in formData
-      });
-    } else {
-      setFormData({
-        ...formData,
-        [name]: value,
-      });
+  const handleChange = (e) => {
+    const name = e?.target?.name;
+    const value = e?.target?.value
+    switch (name) {
+      case 'fname':
+        setFormData({
+          ...formData,
+          fname: value,
+
+        });
+        break;
+
+      case 'lname':
+        setFormData({
+          ...formData,
+          lname: value,
+
+        });
+        break;
+      case 'email':
+        setFormData({
+          ...formData,
+          email: value,
+        });
+        break;
+      case 'contact':
+        setFormData({
+          ...formData,
+          contact: value,
+        });
+        break;
+      case 'password':
+        setFormData({
+          ...formData,
+          password: value,
+
+        });
+        break;
+      case 'password2':
+        setFormData({
+          ...formData,
+          password2: value,
+        });
+        break;
+      case 'gender':
+        setFormData({
+          ...formData,
+          gender: value,
+        });
+        break;
+      case 'prnNo':
+        setFormData({
+          ...formData,
+          prnNo: value,
+        });
+        break;
+        case 'branch':
+          setFormData((prevFormData) => ({
+            ...prevFormData,
+            branch: value, // Always update branch value
+          }));
+        
+          if (name === 'branch' && value === 'Branch') {
+            setFormData((prevFormData) => ({
+              ...prevFormData,
+              prnNo: null,
+              otherbranch: '',
+              organization: 'Hematite branch',
+            }));
+            setErrors((prevErrors) => ({
+              ...prevErrors,
+              otherBranchError: false,
+              pnrNoError: false,
+            }));
+          }
+        
+          if (name === 'branch' && value === 'cdac') {
+            setFormData((prevFormData) => ({
+              ...prevFormData,
+              branch: 'cdac',
+              branch_id: null,
+              otherbranch: '',
+              organization: 'Cdac',
+            }));
+            setErrors((prevErrors) => ({
+              ...prevErrors,
+              otherBranchError: false,
+            }));
+          }
+        
+          if (name === 'branch' && value === 'otherbranch') {
+            setFormData((prevFormData) => ({
+              ...prevFormData,
+              branch: 'otherbranch',
+              branch_id: null,
+              prnNo: null,
+              organization: 'Other branch',
+            }));
+            setErrors((prevErrors) => ({
+              ...prevErrors,
+              pnrNoError: false,
+            }));
+          }
+        
+          break;
+        
+      case 'role':
+        setFormData({
+          ...formData,
+          role: value,
+        });
+        break;
+      case 'organization':
+        setFormData({
+          ...formData,
+          organization: value
+        });
+        break;
+      case 'otherbranch':
+        setFormData({
+          ...formData,
+          otherbranch: value,
+
+        });
+        break;
+      default:
     }
 
-  };
 
-
+  }
 
 
   const handleBlur = (event) => {
@@ -350,23 +477,20 @@ const RegistrationForm = () => {
     Post(urls.student, updatedFormData)
       .then(response => {
         console.log(response);
-        if (response?.status === 201) {
+        if (response?.status === 201 || response?.status === 200) {
           dispatch(userActions.addUser(response.data));
           // Show success snackbar
           setSnackbarOpen(true);
           setSeverity('success');
           setSnackbarMessage('Student Registered Successfully');
-        } else {
-          // Handle cases where status is not 201
-          setSnackbarOpen(true);
-          setSeverity('error');
-          setSnackbarMessage('Internal server error');
         }
       })
       .catch(error => {
+        console.log(error);
+        
         setSnackbarOpen(true);
         setSeverity('error');
-        setSnackbarMessage(error?.response?.statusText)
+        setSnackbarMessage(`${error?.name}:${error?.message}`)
       });
 
     // Clear form data
@@ -534,7 +658,8 @@ const RegistrationForm = () => {
                       variant='outlined'
                       color='primary'
                       label={<span>First Name <span style={{ color: 'red' }}>*</span></span>}  // Add asterisk
-                      onChange={handleChange}
+                      // onChange={(e) => handleChange(e)}
+                      onChange={(e) => handleChange(e)}
                       onBlur={handleBlur}
                       value={fname}
                       name='fname'
@@ -542,7 +667,7 @@ const RegistrationForm = () => {
                       inputProps={{ maxLength: 20 }}
                       size='small'
                       error={errors.fnameError}
-                      helperText={(errors.fnameError && validation.errorText("Invalid first name"))}
+                      helperText={(errors.fnameError && validation.errorText("Enter valid first name"))}
                       InputLabelProps={{
                         style: {
                           fontSize: isSmallScreen ? '12px' : '16px', // Adjust label font size based on screen size
@@ -555,7 +680,7 @@ const RegistrationForm = () => {
                       variant='outlined'
                       color='primary'
                       label={<span>Last Name <span style={{ color: 'red' }}>*</span></span>}  // Add asterisk
-                      onChange={handleChange}
+                      onChange={(e) => handleChange(e)}
                       onBlur={handleBlur}
                       value={lname}
                       name='lname'
@@ -563,7 +688,7 @@ const RegistrationForm = () => {
                       inputProps={{ maxLength: 20 }}
                       size='small'
                       error={errors.lnameError}
-                      helperText={(errors.lnameError && validation.errorText("Invalid last name"))}
+                      helperText={(errors.lnameError && validation.errorText("Enter valid last name"))}
                       InputLabelProps={{
                         style: {
                           fontSize: isSmallScreen ? '12px' : '16px',
@@ -578,7 +703,7 @@ const RegistrationForm = () => {
                       variant='outlined'
                       color='primary'
                       label={<span>Email <span style={{ color: 'red' }}>*</span></span>}  // Add asterisk
-                      onChange={handleChange}
+                      onChange={(e) => handleChange(e)}
                       onBlur={handleBlur}
                       value={email}
                       name='email'
@@ -587,7 +712,7 @@ const RegistrationForm = () => {
                       inputProps={{ maxLength: 30 }}
                       sx={{ mb: 4 }}
                       error={errors.emailError}
-                      helperText={(errors.emailError && validation.errorText("Invalid email id"))}
+                      helperText={(errors.emailError && validation.errorText("Enter valid email id"))}
                       InputLabelProps={{
                         style: {
                           fontSize: isSmallScreen ? '12px' : '16px',
@@ -600,7 +725,7 @@ const RegistrationForm = () => {
                       variant='outlined'
                       color='primary'
                       label={<span>Contact Number <span style={{ color: 'red' }}>*</span></span>}  // Add asterisk
-                      onChange={handleChange}
+                      onChange={(e) => handleChange(e)}
                       onBlur={handleBlur}
                       value={contact}
                       name='contact'
@@ -609,7 +734,7 @@ const RegistrationForm = () => {
                       inputProps={{ maxLength: 10 }}
                       sx={{ mb: 4 }}
                       error={errors.contactError}
-                      helperText={(errors.contactError && validation.errorText("Invalid contact number"))}
+                      helperText={(errors.contactError && validation.errorText("Enter valid contact number"))}
                       InputLabelProps={{
                         style: {
                           fontSize: isSmallScreen ? '12px' : '16px',
@@ -624,7 +749,7 @@ const RegistrationForm = () => {
                       variant='outlined'
                       color='primary'
                       label={<span>Password <span style={{ color: 'red' }}>*</span></span>}  // Add asterisk
-                      onChange={handleChange}
+                      onChange={(e) => handleChange(e)}
                       onBlur={handleBlur}
                       value={password}
                       name='password'
@@ -642,7 +767,7 @@ const RegistrationForm = () => {
                       inputProps={{ maxLength: 20 }}
                       sx={{ mb: 4 }}
                       error={errors.passwordError}
-                      helperText={(errors.passwordError && validation.errorText("Invalid password"))}
+                      helperText={(errors.passwordError && validation.errorText("Enter valid password"))}
                       InputLabelProps={{
                         style: {
                           fontSize: isSmallScreen ? '12px' : '16px',
@@ -655,7 +780,7 @@ const RegistrationForm = () => {
                       variant='outlined'
                       color='primary'
                       label={<span>Confirm Password <span style={{ color: 'red' }}>*</span></span>}  // Add asterisk
-                      onChange={handleChange}
+                      onChange={(e) => handleChange(e)}
                       onBlur={handleBlur}
                       value={password2}
                       name='password2'
@@ -708,7 +833,7 @@ const RegistrationForm = () => {
                       id="demo-simple-select-autowidth-label"
                       name='role'
                       value={role}
-                      onChange={handleChange}
+                      onChange={(e) => handleChange(e)}
                       onBlur={handleBlur}
                       autoWidth
                       label="Select Role"
@@ -730,7 +855,7 @@ const RegistrationForm = () => {
                       aria-labelledby="demo-row-radio-buttons-group-label"
                       name="branch"
                       value={branch || " "}
-                      onChange={handleChange}
+                      onChange={(e) => handleChange(e)}
                       onBlur={handleBlur}
                     >
                       <FormControlLabel value="Branch" control={<Radio />} label="Hematite Branch" />
@@ -747,7 +872,7 @@ const RegistrationForm = () => {
                           id="demo-simple-select-autowidth-label"
                           name='selectedBranch'
                           value={selectedBranch}
-                          onChange={handleChange}
+                          onChange={(e) => handleChange(e)}
                           onBlur={handleBlur}
                           aria-label='Choose branch'
                           autoWidth
@@ -761,16 +886,13 @@ const RegistrationForm = () => {
                         </Select>
                       </FormControl>
                     ) : (
-                      <TextField
-                        fullWidth
-                        size='small'
-                        value={capitalizeFirstLetter(selectedBranch || (allBranch[0] ? allBranch[0].branchName : ''))}
-                        name='selectedBranch'
-                        label="Branch"
-                        InputProps={{
-                          readOnly: true,
-                        }}
-                      />
+                      (() => {
+                        // Directly set the value if only one branch exists
+                        if (allBranch && allBranch.length === 1 && selectedBranch !== allBranch[0].id) {
+                          handleChange({ target: { name: 'selectedBranch', value: allBranch[0].id } });
+                        }
+                        return null; // Do not render TextField
+                      })()
                     ))}
 
 
@@ -783,11 +905,11 @@ const RegistrationForm = () => {
                         label="PRN No"
                         name="prnNo"
                         value={prnNo}
-                        onChange={handleChange}
+                        onChange={(e) => handleChange(e)}
                         onBlur={handleBlur}
                         inputProps={{ maxLength: 20 }}
                         error={errors.pnrNoError}
-                        helperText={(errors.pnrNoError && validation.errorText("Invalid PRN-No"))}
+                        helperText={(errors.pnrNoError && validation.errorText("Enter valid PRN-No"))}
                         fullWidth
                         size='small'
                       />
@@ -802,12 +924,12 @@ const RegistrationForm = () => {
                         name="otherbranch"
                         value={otherbranch}
                         inputProps={{ maxLength: 30 }}
-                        onChange={handleChange}
+                        onChange={(e) => handleChange(e)}
                         onBlur={handleBlur}
                         fullWidth
                         size='small'
                         error={errors.otherBranchError}
-                        helperText={(errors.otherBranchError && validation.errorText("Invalid other branch"))}
+                        helperText={(errors.otherBranchError && validation.errorText("Enter valid other branch"))}
                       />
                     )}
                   </FormControl>
@@ -820,7 +942,7 @@ const RegistrationForm = () => {
                       aria-label="gender"
                       name="gender"
                       value={gender || " "}
-                      onChange={handleChange}
+                      onChange={(e) => handleChange(e)}
                       onBlur={handleBlur}
                       sx={{ mb: 4 }}
                       row

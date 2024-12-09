@@ -55,9 +55,9 @@ function BatchDetails({ selectedBatch, updateShowBatchDetail, getTrainerName }) 
       .then(response => {
         const reversedUsers = response.data.reverse();
         dispatch(userActions.getUser(reversedUsers));
-        console.log(reversedUsers);
+       
       })
-      .catch(error => console.log("user error: ", error));
+      .catch(error =>{ setSnackbar({ open: true, message: `${error?.name}-${error?.message}`, severity: 'error' })});
   }, []);
 
   useEffect(() => {
@@ -65,18 +65,14 @@ function BatchDetails({ selectedBatch, updateShowBatchDetail, getTrainerName }) 
       const reverseFeedback = response.data.reverse();
       dispatch(feedbackAnsActions.getBatchWiseStudent(reverseFeedback));
       setBatch(response.data);
-    }).catch((error) => {
-      console.error('Error fetching feedback:', error);
-    });
+    }).catch((error) => { setSnackbar({ open: true, message: `${error?.name}-${error?.message}`, severity: 'error' })});
   }, []);
   useEffect(() => {
     Get(urls.batchWiseStudent).then(response => {
       const reverseFeedback = response.data.reverse();
       dispatch(feedbackAnsActions.getBatchWiseStudent(reverseFeedback));
       setBatch(response.data);
-    }).catch((error) => {
-      console.error('Error fetching feedback:', error);
-    });
+    }).catch((error) => { setSnackbar({ open: true, message: `${error?.name}-${error?.message}`, severity: 'error' })});
   }, [snackbar]);
 
   const calculateLeftDays = (startDate, durationInDays) => {
@@ -133,8 +129,6 @@ function BatchDetails({ selectedBatch, updateShowBatchDetail, getTrainerName }) 
       return;
     }
 
-    console.log("Selected Batch ID:", selectedBatch.id);
-    console.log("Checked Students:", checkedStudents);
     const currentDate = new Date().toISOString().split('T')[0];
 
     checkedStudents.forEach(studentId => {
@@ -150,7 +144,7 @@ function BatchDetails({ selectedBatch, updateShowBatchDetail, getTrainerName }) 
           date: currentDate
         };
 
-        console.log("Submitting student data:", studentData);
+       
 
         Post(urls.batchWiseStudent, studentData)
           .then(response => {

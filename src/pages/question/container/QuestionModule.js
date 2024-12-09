@@ -130,7 +130,7 @@ const QuestionModule = () => {
         level: question.level,
         exam_id: selectedExam
       }));
-      console.log(selectedExam);
+     
 
       // Set the exam name for generating file name
       const selectedExamObject = allExam.find(exam => exam.id === selectedExam);
@@ -235,7 +235,7 @@ const QuestionModule = () => {
     if (questionImage) {
       formData.append('questionImage', questionImage);
     }
-    console.log('formData', formData);
+  
 
     Post(urls.question, formData)
       .then((response) => {
@@ -397,7 +397,7 @@ const QuestionModule = () => {
   // Use PapaParse to parse the CSV file
   Papa.parse(selectedFile, {
     complete: (result) => {
-      console.log('Parsed result:', result); // Check the parsed content
+  
 
       // If the result has errors, prevent API call and show error
       if (result.errors && result.errors.length > 0) {
@@ -548,7 +548,7 @@ const QuestionModule = () => {
   const isSubmitDisabled = !question || !option1 || !option2 || !answer || !marks || !isValidFileSize || !level;
 
   const filteredQuestions = allquestions && allquestions.length > 0 && allquestions.filter((question) => question?.exam?.id === selectedExam);
-  console.log(filteredQuestions);
+  
   const questionLevels = ['simple', 'intermediate', 'complex'];
   return (
     <>

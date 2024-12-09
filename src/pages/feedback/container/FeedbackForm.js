@@ -90,76 +90,162 @@ const FeedbackForm = () => {
     }
   }, [selectedBranch, allBranch]);
   //----------------------------Function to handle changes in form fields----------------------//
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    if (name === 'selectedBranch') {
-      setSelectedBranch(value); // Update selectedBranch with the new value
-      console.log(selectedBranch);
-      const selectedBranchObject = allBranch.find(branch => branch.id === value);
-      const branchId = selectedBranchObject ? selectedBranchObject.id : ''; // Get the branch id from the selected branch object
-      setFormData({
-        ...formData,
-        branch_id: branchId, // Update branch_id in formData
-      });
-    } else {
-      setFormData({
-        ...formData,
-        [name]: value,
-      });
-    }
-    if (name === 'branch' && value === 'Branch') {
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        cidacPrn: null,
-        otherbranch: '',
-        organization: 'Hematite branch'
-      }));
-      setErrors({
-        ...errors,
-        otherBranchError: false,
-        pnrNoError: false
-      })
+  const handleChange = (e) => {
+    const name = e?.target?.name;
+    const value = e?.target?.value
+   
+    
+
+    switch (name) {
+      case 'name':
+        setFormData({
+          ...formData,
+          name: value,
+
+        });
+        break;
+        
+    
+        
+      case 'email':
+        setFormData({
+          ...formData,
+          email: value,
+        });
+        break;
+      case 'contact':
+        setFormData({
+          ...formData,
+          contact: value,
+        });
+        break;
+
+      case 'question1':
+        setFormData({
+          ...formData,
+          question1: value,
+
+        });
+        break;
+      case 'question2':
+        setFormData({
+          ...formData,
+          question2: value,
+        });
+        break;
+      case 'question3':
+        setFormData({
+          ...formData,
+          question3: value,
+        });
+        break;
+        case 'question4':
+          setFormData({
+            ...formData,
+            question4: value,
+  
+          });
+          break;
+          case 'question5':
+            setFormData({
+              ...formData,
+              question5: value,
+    
+            });
+            break;
+      case 'cidacPrn':
+        setFormData({
+          ...formData,
+          cidacPrn: value,
+        });
+        break;
+        case 'branch':
+          setFormData((prevFormData) => ({
+            ...prevFormData,
+            branch: value, // Always update branch value
+          }));
+        
+          if (name === 'branch' && value === 'Branch') {
+            setFormData((prevFormData) => ({
+              ...prevFormData,
+              cidacPrn: null,
+              otherbranch: '',
+              organization: 'Hematite branch'
+            }));
+            setErrors({
+              ...errors,
+              otherBranchError: false,
+              pnrNoError: false
+            })
+          }
+      
+          if (name === 'branch') {
+            const selectedBranchObject = allBranch.find(branchObj => branchObj.branchName === value);
+            if (selectedBranchObject) {
+              setFormData(prevFormData => ({
+                ...prevFormData,
+                branch_id: selectedBranchObject.id,
+                // Other necessary updates
+              }));
+            }
+          }
+      
+          if (name === 'branch' && value === 'cdac') {
+            setFormData((prevFormData) => ({
+              ...prevFormData,
+              branch: 'cdac',
+              branch_id: null,
+              otherbranch: '',
+              organization: 'Cdac'
+            }));
+            setErrors({
+              ...errors,
+              otherBranchError: false
+            })
+          }
+          if (name === 'branch' && value === 'otherbranch') {
+            setFormData((prevFormData) => ({
+              ...prevFormData,
+              branch: 'otherbranch',
+              branch_id: null,
+              cidacPrn: null,
+              organization: 'Other branch'
+              // otherbranch: '',
+            }));
+            setErrors({
+              ...errors,
+              pnrNoError: false
+            })
+          }
+        
+          break;
+        
+      case 'role':
+        setFormData({
+          ...formData,
+          role: value,
+        });
+        break;
+      case 'organization':
+        setFormData({
+          ...formData,
+          organization: value
+        });
+        break;
+      case 'otherbranch':
+        setFormData({
+          ...formData,
+          otherbranch: value,
+
+        });
+        break;
+      default:
     }
 
-    if (name === 'branch') {
-      const selectedBranchObject = allBranch.find(branchObj => branchObj.branchName === value);
-      if (selectedBranchObject) {
-        setFormData(prevFormData => ({
-          ...prevFormData,
-          branch_id: selectedBranchObject.id,
-          // Other necessary updates
-        }));
-      }
-    }
 
-    if (name === 'branch' && value === 'cdac') {
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        branch: 'cdac',
-        branch_id: null,
-        otherbranch: '',
-        organization: 'Cdac'
-      }));
-      setErrors({
-        ...errors,
-        otherBranchError: false
-      })
-    }
-    if (name === 'branch' && value === 'otherbranch') {
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        branch: 'otherbranch',
-        branch_id: null,
-        cidacPrn: null,
-        organization: 'Other branch'
-        // otherbranch: '',
-      }));
-      setErrors({
-        ...errors,
-        pnrNoError: false
-      })
-    }
   }
+
+  
   const handleBlur = (event) => {
     const { name, value } = event.target;
 
@@ -346,14 +432,14 @@ const FeedbackForm = () => {
                   label={<span>Full name<span style={{ color: 'red' }}>*</span></span>}
                   name="name"
                   value={name}
-                  onChange={handleChange}
+                  onChange={(e) => handleChange(e)}
                   onBlur={handleBlur}
                   variant="outlined"
                   size="small"
                   inputProps={{ maxLength: 40 }}
 
                   error={errors.nameError}
-                  helperText={errors.nameError && validation.errorText("Invalid fullname")}
+                  helperText={errors.nameError && validation.errorText("Enter Valid Fullname")}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -362,14 +448,14 @@ const FeedbackForm = () => {
                   label={<span>Email<span style={{ color: 'red' }}>*</span></span>}
                   name="email"
                   value={email}
-                  onChange={handleChange}
+                  onChange={(e) => handleChange(e)}
                   onBlur={handleBlur}
                   variant="outlined"
                   inputProps={{ maxLength: 30 }}
                   size="small"
 
                   error={errors.emailError}
-                  helperText={errors.emailError && validation.errorText("Invalid email")}
+                  helperText={errors.emailError && validation.errorText("Enter Valid Email")}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -378,7 +464,7 @@ const FeedbackForm = () => {
                   label={<span>Contact<span style={{ color: 'red' }}>*</span></span>}
                   name="contact"
                   value={contact}
-                  onChange={handleChange}
+                  onChange={(e) => handleChange(e)}
                   onBlur={handleBlur}
                   variant="outlined"
                   size="small"
@@ -386,7 +472,7 @@ const FeedbackForm = () => {
 
                   sx={{ mb: 1 }}
                   error={errors.contactError}
-                  helperText={errors.contactError && validation.errorText("Invalid contact")}
+                  helperText={errors.contactError && validation.errorText("Enter Valid Contact")}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -397,7 +483,7 @@ const FeedbackForm = () => {
                     aria-label="organization"
                     name="branch"
                     value={branch || " "}
-                    onChange={handleChange}
+                    onChange={(e) => handleChange(e)}
                   >
                     <FormControlLabel value="Branch" control={<Radio />} label="Hematite Branch" />
                     <FormControlLabel value="cdac" control={<Radio />} label="CDAC" />
@@ -412,7 +498,7 @@ const FeedbackForm = () => {
                         id="demo-simple-select-autowidth-label"
                         name='selectedBranch'
                         value={selectedBranch} // Use selectedBranch as the value
-                        onChange={handleChange}
+                        onChange={(e) => handleChange(e)}
                         onBlur={handleBlur}
                         aria-label='Choose branch'
                         autoWidth
@@ -427,18 +513,16 @@ const FeedbackForm = () => {
                       </Select>
 
                     </FormControl>)
-                    : (
-                      <TextField
-                        fullWidth
-                        size='small'
-                        value={selectedBranch || (allBranch[0] ? allBranch[0].branchName : '')}
-                        name='selectedBranch'
-                        label="Branch"
-                        InputProps={{
-                          readOnly: true,
-                        }}
-                      />
+                    :   (
+                      (() => {
+                        // Directly set the value if only one branch exists
+                        if (allBranch && allBranch.length === 1 && selectedBranch !== allBranch[0].id) {
+                          handleChange({ target: { name: 'selectedBranch', value: allBranch[0].id } });
+                        }
+                        return null; // Do not render TextField
+                      })()
                     ))}
+
 
 
 
@@ -449,13 +533,13 @@ const FeedbackForm = () => {
                       label="PRN No"
                       name="cidacPrn"
                       value={cidacPrn}
-                      onChange={handleChange}
+                      onChange={(e) => handleChange(e)}
                       onBlur={handleBlur}
                       inputProps={{ maxLength: 20 }}
                       fullWvariant="outlined"
                       size="small"
                       error={errors.pnrNoError}
-                      helperText={(errors.pnrNoError && validation.errorText("Invalid PRN No"))}
+                      helperText={(errors.pnrNoError && validation.errorText("Enter Valid PRN No"))}
                     />
                   }
                   {formData.branch === 'otherbranch' &&
@@ -464,13 +548,13 @@ const FeedbackForm = () => {
                       label="Other Branch"
                       name="otherbranch"
                       value={otherbranch}
-                      onChange={handleChange}
+                      onChange={(e) => handleChange(e)}
                       onBlur={handleBlur}
                       inputProps={{ maxLength: 30 }}
                       variant="outlined"
                       size="small"
                       error={errors.otherBranchError}
-                      helperText={(errors.otherBranchError && validation.errorText("Invalid other branch"))}
+                      helperText={(errors.otherBranchError && validation.errorText("Enter Valid Other Branch"))}
                     />
                   }
                 </FormControl>
@@ -483,14 +567,14 @@ const FeedbackForm = () => {
                   label="Rate Us between 1 to 5"
                   name="question1"
                   value={question1}
-                  onChange={handleChange}
+                  onChange={(e) => handleChange(e)}
                   onBlur={handleBlur}
                   variant="outlined"
                   size="small"
                   inputProps={{ maxLength: 1 }}
                   required
                   error={errors.questionError}
-                  helperText={errors.questionError && validation.errorText("Invalid answer")}
+                  helperText={errors.questionError && validation.errorText("Enter Valid Answer")}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -500,14 +584,14 @@ const FeedbackForm = () => {
                   label='Rate Us between 1 to 5'
                   name="question2"
                   value={question2}
-                  onChange={handleChange}
+                  onChange={(e) => handleChange(e)}
                   onBlur={handleBlur}
                   inputProps={{ maxLength: 1 }}
                   variant="outlined"
                   size="small"
                   required
                   error={errors.questionError2}
-                  helperText={errors.questionError2 && validation.errorText("Invalid answer")}
+                  helperText={errors.questionError2 && validation.errorText("Enter Valid Answer")}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -517,7 +601,7 @@ const FeedbackForm = () => {
                   label="Your answer"
                   name="question3"
                   value={question3}
-                  onChange={handleChange}
+                  onChange={(e) => handleChange(e)}
                   onBlur={handleBlur}
                   inputProps={{ maxLength: 500 }}
                   variant="outlined"
@@ -526,7 +610,7 @@ const FeedbackForm = () => {
                   multiline
                   rows={4}
                   error={errors.questionError3}
-                  helperText={errors.questionError3 && validation.errorText("Invalid answer,Max:500 characters")}
+                  helperText={errors.questionError3 && validation.errorText("Enter Valid Answer,Max:500 characters")}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -536,7 +620,7 @@ const FeedbackForm = () => {
                   label="Your answer"
                   name="question4"
                   value={question4}
-                  onChange={handleChange}
+                  onChange={(e) => handleChange(e)}
                   onBlur={handleBlur}
                   variant="outlined"
                   size="small"
@@ -544,7 +628,7 @@ const FeedbackForm = () => {
                   multiline
                   rows={4}
                   error={errors.questionError4}
-                  helperText={errors.questionError4 && validation.errorText("Invalid answer,Max:500 characters")}
+                  helperText={errors.questionError4 && validation.errorText("Enter Valid Answer,Max:500 characters")}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -554,7 +638,7 @@ const FeedbackForm = () => {
                   label="Your answer"
                   name="question5"
                   value={question5}
-                  onChange={handleChange}
+                  onChange={(e) => handleChange(e)}
                   onBlur={handleBlur}
                   variant="outlined"
                   size="small"
@@ -562,7 +646,7 @@ const FeedbackForm = () => {
                   multiline
                   rows={4}
                   error={errors.questionError5}
-                  helperText={errors.questionError5 && validation.errorText("Invalid answer,Max:500 characters")}
+                  helperText={errors.questionError5 && validation.errorText("Enter Valid Answer,Max:500 characters")}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -571,7 +655,7 @@ const FeedbackForm = () => {
                   label="Date and Time"
                   name="datetime"
                   value={datetime}
-                  onChange={handleChange}
+                  onChange={(e) => handleChange(e)}
                   variant="outlined"
                   size="small"
                   disabled // Make the field disabled to prevent manual editing

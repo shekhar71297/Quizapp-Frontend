@@ -229,12 +229,15 @@ const EmployeeModule = () => {
       setOpen(true);
       setisAddaEmp(true);
       resetEmployeeFormHandler();
+      resetError()
     }
   };
 
   // Close dialog
   const handleClose = () => {
     setOpen(false);
+    resetEmployeeFormHandler();
+    resetError()
   };
   const handleopenDetails = (record) => {
     setIsDetailsPopup(true);
@@ -244,6 +247,7 @@ const EmployeeModule = () => {
   const handlecloseDetails = () => {
     setIsDetailsPopup(false);
     setSelectedUserDetail("");
+    
   };
 
   // Confirm employee deletion
@@ -321,7 +325,17 @@ const EmployeeModule = () => {
     setdob("");
     setemployeeId("");
   };
-
+  const resetError = () => {
+    setErrors((prevState) => ({
+      ...prevState, // Maintain the previous state
+      fnameError: false,
+      lnameError: false,
+      contactError: false,
+      emailError: false,
+      employeeIdError: false
+    }));
+  };
+  
   // Update or add employee
   const updateEmp = (event) => {
     event.preventDefault();
@@ -557,7 +571,7 @@ const EmployeeModule = () => {
                     onChange={handleChange}
                     onBlur={handleBlur}
                     error={errors.fnameError}
-                    helperText={errors.fnameError && validation.errorText("Invalid First Name")}
+                    helperText={errors.fnameError && validation.errorText("Enter Valid First Name")}
                   />
                 </Grid>
                 <Grid item xs={12} sx={{ marginTop: 2 }}>
@@ -574,7 +588,7 @@ const EmployeeModule = () => {
                     onChange={handleChange}
                     onBlur={handleBlur}
                     error={errors.lnameError}
-                    helperText={errors.lnameError && validation.errorText("Invalid Last Name")}
+                    helperText={errors.lnameError && validation.errorText("Enter Valid Last Name")}
                   />
                 </Grid>
                 <Grid item xs={12} sx={{ marginTop: 2 }}>
@@ -591,7 +605,7 @@ const EmployeeModule = () => {
                     onChange={handleChange}
                     onBlur={handleBlur}
                     error={errors.emailError}
-                    helperText={errors.emailError && validation.errorText("Invalid Email")}
+                    helperText={errors.emailError && validation.errorText("Enter Valid Email")}
                   />
                 </Grid>
 
@@ -609,7 +623,7 @@ const EmployeeModule = () => {
                     onChange={handleChange}
                     onBlur={handleBlur}
                     error={errors.contactError}
-                    helperText={errors.contactError && validation.errorText("Invalid Contact")}
+                    helperText={errors.contactError && validation.errorText("Enter Valid Contact")}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -655,7 +669,7 @@ const EmployeeModule = () => {
                     inputProps={{ maxLength: 3 }}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    helperText={(errors.employeeIdError && validation.errorText('Invalid Employee Id'))}
+                    helperText={(errors.employeeIdError && validation.errorText('Enter Valid Employee Id'))}
                     error={errors.employeeIdError}
                   />
                 </Grid>

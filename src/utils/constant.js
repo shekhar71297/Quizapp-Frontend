@@ -45,7 +45,7 @@ export const isValidOtherBranch = (other) => /^[A-Za-z]{2,30}$/.test(other);
 export const isValidVoucher = (voucher) => /^[A-Z0-9]{6}$/.test(voucher);
 export const isValidFeedbackAns = (ans) =>/^[a-zA-Z]{2,500}$/.test(ans);
 export const isValidEmpId = (emp) => /^[0-9]{3}$/.test(emp);
-export const isValidBatchName = (batch) => /^[a-zA-Z0-9]{1,30}$/.test(batch);
+export const isValidBatchName = (batch) => /^[a-zA-Z0-9\- ]{2,30}$/.test(batch);
 
 
 export const errorText = (message) => {

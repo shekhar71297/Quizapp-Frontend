@@ -71,7 +71,12 @@ function ExamModule() {
       const reversedexam = response.data.reverse(); // Reverse the array of users
       dispatch(examActions.GET_EXAM(reversedexam));
     })
-      .catch(error => console.log("Exam error: ", error));
+      .catch(error => {
+        setSnackbarOpen(true);
+        setSnackbarMessage(`${error?.name}-${error?.message}`);
+        setSnackbarSeverity('error')
+
+      });
   }, [])
 
   useEffect(() => {
@@ -137,12 +142,43 @@ function ExamModule() {
   const handleExamChange = (event) => {
     const { name, value, type } = event.target;
     const newValue = type === 'radio' ? (value === 'true') : value;
-
-    setSelectedExam(prevState => ({
-      ...prevState,
-      [name]: newValue.toLowerCase()
-    }));
+  
+    switch (name) {
+      case 'examName':
+        setSelectedExam(prevState => ({
+          ...prevState,
+          examName: newValue.toLowerCase()
+        }));
+        break;
+  
+      case 'examTime':
+        setSelectedExam(prevState => ({
+          ...prevState,
+          examTime: newValue.toLowerCase()
+        }));
+        break;
+  
+      case 'totalQuestion':
+        setSelectedExam(prevState => ({
+          ...prevState,
+          totalQuestion: newValue.toLowerCase()
+        }));
+        break;
+  
+      case 'examStatus':
+        setSelectedExam(prevState => ({
+          ...prevState,
+          examStatus: newValue
+        }));
+        break;
+  
+      default:
+        break;
+    }
   };
+  
+
+
 
   //------------------------function for handling the toggel change-----------------//
 
@@ -307,7 +343,12 @@ function ExamModule() {
     const isUpdateDuplicate = exams.some(exam => exam.examName === examName && exam.id !== id);
 
     if (isAddExam) {
-
+      if (isUpdateDuplicate) {
+        setSnackbarOpen(true);
+        setSnackbarMessage('An exam with the same name already exists.');
+        setSnackbarSeverity('error')
+        return;
+      } 
 
       Post(urls.exams, AddExam)
         .then(response => {
@@ -330,11 +371,7 @@ function ExamModule() {
 
 
     } else {
-      if (isUpdateDuplicate) {
-        setSnackbarOpen(true);
-        setSnackbarMessage('An exam with the same name already exists.');
-        setSnackbarSeverity('error')
-      } else {
+      
 
         Put(`${urls.exams}${id}/`, updatedExam)
           .then(response => {
@@ -352,16 +389,25 @@ function ExamModule() {
           });
 
 
-      }
+      
     }
 
     handleClose();
     // initExamRequest();
   };
+  const resetError = () => {
+    setErrors((prevState) => ({
+      ...prevState, // Maintain the previous state
+      examNameError: false,
+      examTimeError: false,
+      totalQuestionError: false,
+    }));
+  };
 
   //-------------------------validation for exam code--------------------------//
   const handleClose = () => {
     setOpen(false);
+    resetError()
   };
 
   //---------------------------open popup to add exam popup------------------------//
@@ -558,7 +604,7 @@ function ExamModule() {
                     inputProps={{ maxLength: 30 }}
                     onBlur={handleBlur}
                     error={errors.examNameError}
-                    helperText={(errors.examNameError && validation.errorText("Invalid Exam Name"))}
+                    helperText={(errors.examNameError && validation.errorText("Enter Valid Exam Name"))}
                   />
                 </Grid>
                 <Grid item xs={12} >
@@ -575,7 +621,7 @@ function ExamModule() {
                     onBlur={handleBlur}
                     inputProps={{ maxLength: 6 }}
                     error={errors.examTimeError}
-                    helperText={(errors.examTimeError && validation.errorText("Invalid Exam Time.E.g-1min"))}
+                    helperText={(errors.examTimeError && validation.errorText("Enter Valid Exam Time.E.g-1min"))}
                   />
                 </Grid>
                 <Grid item xs={12} >
@@ -592,7 +638,7 @@ function ExamModule() {
                     placeholder='enter a count of questions'
                     onBlur={handleBlur}
                     error={errors.totalQuestionError}
-                    helperText={(errors.totalQuestionError && validation.errorText("Invalid Questions Count"))}
+                    helperText={(errors.totalQuestionError && validation.errorText("Enter Valid Questions Count"))}
                   />
                 </Grid>
                 {/* <Grid item xs={12}>

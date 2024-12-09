@@ -80,20 +80,33 @@ const AddBatch = () => {
 	useEffect(() => {
 		Get(urls.course)
 			.then((response) => dispatch(batchActions.Get_Course(response.data)))
-			.catch((error) => console.log("Batch error: ", error));
+			.catch((error) => {
+			setSnackbarMessage(`${error?.name}-${error?.message}`);
+			setSeverity('error')
+			setSnackbarOpen(true);
+			}
+		);
 	}, []);
 
 	useEffect(() => {
 		Get(urls.batch)
 			.then((response) => dispatch(batchActions.GET_BATCH(response.data.reverse())))
-			.catch((error) => console.log("Batch error: ", error));
+			.catch((error) => {
+				setSnackbarMessage(`${error?.name}-${error?.message}`);
+				setSeverity('error')
+				setSnackbarOpen(true);
+				});
 	}, [snackbarOpen]);
-	console.log(SingleBatch);
+
 
 	useEffect(() => {
 		Get(urls.batch)
 			.then((response) => dispatch(batchActions.GET_BATCH(response.data.reverse())))
-			.catch((error) => console.log("Batch error: ", error));
+			.catch((error) =>  {
+				setSnackbarMessage(`${error?.name}-${error?.message}`);
+				setSeverity('error')
+				setSnackbarOpen(true);
+				});
 	}, []);
 
 	// Fetch all employees
@@ -103,7 +116,11 @@ const AddBatch = () => {
 				const reversedEmployee = response.data.reverse();
 				dispatch(staffActions.getEmployee(reversedEmployee));
 			})
-			.catch(error => console.log("staff error: ", error));
+			.catch(error =>  {
+				setSnackbarMessage(`${error?.name}-${error?.message}`);
+				setSeverity('error')
+				setSnackbarOpen(true);
+				});
 	}, []);
 
 	// Update form fields when emp state changes
@@ -148,6 +165,18 @@ const AddBatch = () => {
 			}));
 		}
 	}
+
+	const resetError = () => {
+    setErrors((prevState) => ({
+      ...prevState, // Maintain the previous state
+			fnameError: false,
+			lnameError: false,
+			contactError: false,
+			emailError: false,
+			employeeIdError: false,
+			batchNameError: false
+    }));
+  };
 	// Handle input change
 	const handleChange = (event) => {
 		const { name, value } = event.target;
@@ -225,7 +254,7 @@ const AddBatch = () => {
 	const handleOpen = (id = null) => {
 		if (id !== null) {
 			const batch = allBatches.find(val => val.id === id);
-			console.log(batch);
+		
 			if (batch) {
 				const { id, duration_in_days, startDate, batchname } = batch;
 				setId(id);
@@ -261,6 +290,7 @@ const AddBatch = () => {
 	// Close dialog
 	const handleClose = () => {
 		setOpen(false);
+		resetError()
 	};
 
 	// Confirm employee deletion
@@ -326,7 +356,7 @@ const AddBatch = () => {
 			trainer_id: trainerId,
 			duration_in_days: duration_in_days,
 			startDate: startDate,
-			batchname: batchname.toLowerCase(),
+			batchname: `${batchname.toLowerCase()}-${startDate}`,
 		};
 		if (isAddaEmp) {
 			// addEmployeeRequest(empObj);
@@ -529,7 +559,7 @@ const AddBatch = () => {
 										value={batchname}
 										onChange={handleChange}
 										error={errors.batchNameError}
-										helperText={(errors.batchNameError && validation.errorText("Invalid Batch Name."))}
+										helperText={(errors.batchNameError && validation.errorText("Enter Valid Batch Name."))}
 									/>
 								</Grid>
 								<Grid item xs={12} md={6}>
