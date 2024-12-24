@@ -48,6 +48,10 @@ const EmployeeModule = () => {
   const [employeeId, setemployeeId] = useState("");
   const [contact, setContact] = useState("");
   const [gender, setGender] = useState("");
+  const [designation, setDesignation] = useState("");
+  const [department, setDepartment] = useState("");
+  const [shift,setShift] = useState("")
+  const [status, setStatus] = useState(""); 
   const [email, setEmail] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -75,12 +79,42 @@ const EmployeeModule = () => {
   const dispatch = useDispatch();
   const { allEmployee } = useSelector((store) => store.employee)
   const { emp } = useSelector((state) => state.employee);
-  const { allUser } = useSelector((store) => store.user)
+  const { allUser } = useSelector((store) => store.user);
+  const { allDepartment } = useSelector((state) => state.employee);
+  const { allDesignation } = useSelector((state) => state.employee);
+  const { allShift } = useSelector((state) => state.employee);
   const [showSubmitButton, setShowSubmitButton] = useState(true);
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
   // Fetch all employees
+  useEffect(() => {
+    Get(`${urls.designation}`)
+      .then(response => {
+        const reversedEmployee = response.data.reverse();
+        dispatch(staffActions.getDesignation(reversedEmployee));
+      })
+      .catch(error => console.log("staff error: ", error));
+  }, []);
+
+  useEffect(() => {
+    Get(`${urls.shift}`)
+      .then(response => {
+        const reversedEmployee = response.data.reverse();
+        dispatch(staffActions.getShift(reversedEmployee));
+      })
+      .catch(error => console.log("staff error: ", error));
+  }, []);
+
+  useEffect(() => {
+    Get(`${urls.department}`)
+      .then(response => {
+        const reversedEmployee = response.data.reverse();
+        dispatch(staffActions.getDepartment(reversedEmployee));
+      })
+      .catch(error => console.log("staff error: ", error));
+  }, []);
+
   useEffect(() => {
     Get(`${urls.employee}`)
       .then(response => {
@@ -103,7 +137,7 @@ const EmployeeModule = () => {
   // Update form fields when emp state changes
   useEffect(() => {
     if (emp) {
-      const { id, fname, lname, role, dob, employeeId, contact, gender, email } = emp;
+      const { id, fname, lname, role, dob, employeeId, contact, gender, email,designation,department,status,shift } = emp;
       setId(id);
       setFname(fname);
       setLname(lname);
@@ -113,6 +147,10 @@ const EmployeeModule = () => {
       setContact(contact);
       setGender(gender);
       setEmail(email);
+      setDepartment(department?.department_name)
+      setDesignation(designation?.designation_name)
+      setShift(`${shift?.startTime}-${shift?.endTime}`)
+      setStatus(status)
     }
   }, [emp]);
 
@@ -136,7 +174,7 @@ const EmployeeModule = () => {
   // Handle input change
   const handleChange = (event) => {
     const { name, value } = event.target;
-
+  
     // Update state based on input name
     switch (name) {
       case "fname":
@@ -163,10 +201,23 @@ const EmployeeModule = () => {
       case "email":
         setEmail(value);
         break;
+      case "department":
+        setDepartment(value); // department should be the id of the selected department
+        break;
+      case "designation":
+        setDesignation(value); // designation should be the id of the selected designation
+        break;
+      case "status":
+        setStatus(value);
+        break;  
+      case 'shift':
+        setShift(value);
+        break;  
       default:
         break;
     }
-  }
+  };
+  
   const handleBlur = (event) => {
     const { name, value } = event.target;
     // Validate input based on input name
@@ -212,7 +263,7 @@ const EmployeeModule = () => {
       // Find the employee with the given id from allEmployee array
       const employee = allEmployee.find(emp => emp.id === id);
       if (employee) {
-        const { id, fname, lname, role, dob, employeeId, contact, gender, email } = employee;
+        const { id, fname, lname, role, dob, employeeId, contact, gender, email, department, designation,status,shift } = employee;
         setId(id);
         setFname(fname);
         setLname(lname);
@@ -224,6 +275,10 @@ const EmployeeModule = () => {
         setEmail(email);
         setOpen(true);
         setisAddaEmp(false);
+        setDepartment(department?.id);
+        setDesignation(designation?.id);
+        setShift(shift?.id)
+        setStatus(status)
       }
     } else {
       setOpen(true);
@@ -247,7 +302,7 @@ const EmployeeModule = () => {
   const handlecloseDetails = () => {
     setIsDetailsPopup(false);
     setSelectedUserDetail("");
-    
+
   };
 
   // Confirm employee deletion
@@ -266,14 +321,14 @@ const EmployeeModule = () => {
       // Delete employee
       Delete(`${urls.employee}${id}`)
         .then(response => {
-          if(response.status === 200 || response.status === 201){
+          if (response.status === 200 || response.status === 201) {
             closeConfirmDialog();
             setSnackbarOpen(true);
             setSnackbarMessage('Employee Deleted!');
             setSeverity('success');
-          dispatch(staffActions.deleteEmployee(id));
+            dispatch(staffActions.deleteEmployee(id));
           }
-        
+
         })
         .catch(error => console.log("Employee deletion error: ", error));
 
@@ -281,9 +336,9 @@ const EmployeeModule = () => {
       if (user) {
         Delete(`${urls.user}${user.id}`)
           .then(response => {
-            if(response.status === 200 || response.status === 201){
+            if (response.status === 200 || response.status === 201) {
               dispatch(userActions.deleteUser(user.id));
-            }  
+            }
           })
           .catch(error => {
             setSnackbarOpen(true);
@@ -293,8 +348,8 @@ const EmployeeModule = () => {
       }
 
       // Close confirmation dialog and show success message
-      
-    } 
+
+    }
   };
 
   // Delete data handler
@@ -324,6 +379,11 @@ const EmployeeModule = () => {
     setEmail("");
     setdob("");
     setemployeeId("");
+    setDepartment("");
+    setDesignation("");
+    setShift("")
+    setStatus("")
+
   };
   const resetError = () => {
     setErrors((prevState) => ({
@@ -335,7 +395,7 @@ const EmployeeModule = () => {
       employeeIdError: false
     }));
   };
-  
+
   // Update or add employee
   const updateEmp = (event) => {
     event.preventDefault();
@@ -366,6 +426,10 @@ const EmployeeModule = () => {
       employeeId: employeeId,
       gender: gender,
       contact: contact,
+      department_id: department,
+      designation_id: designation,
+      shift_id: shift,
+      status:status
     };
     if (isAddaEmp) {
       // addEmployeeRequest(empObj);
@@ -428,11 +492,13 @@ const EmployeeModule = () => {
     const employeeIdIncludes = data.employeeId && data?.employeeId?.toString().includes(query);
     const dateIncludes = data.dob && data.dob.includes(query);
     const genderIncludes = data.gender && data.gender.toLowerCase().includes(query);
+    const statusIncludes = data?.status && data?.status.toLowerCase().includes(query);
+    
 
-    return fnameIncludes || lnameIncludes || emailIncludes || roleIncludes || dateIncludes || genderIncludes || contactIncludes || employeeIdIncludes;
+    return fnameIncludes || lnameIncludes || emailIncludes || roleIncludes || dateIncludes || genderIncludes || contactIncludes || employeeIdIncludes ||statusIncludes;
   });
   // Determine if submit button should be disabled
-  const isSubmitDisabled = !fname || !lname || !email || !dob || !contact || !role || !gender || !employeeId || errors.fnameError || errors.lnameError || errors.emailError || errors.contactError || errors.passwordError || errors.employeeIdError;
+  const isSubmitDisabled = !status||!fname || !lname || !email || !dob || !contact || !role || !gender || !employeeId || errors.fnameError || errors.lnameError || errors.emailError || errors.contactError || errors.passwordError || errors.employeeIdError;
 
   return (
     <>
@@ -645,6 +711,86 @@ const EmployeeModule = () => {
                     <MenuItem value="counsellor">Counsellor</MenuItem>
                   </TextField>
                 </Grid>
+                
+                <Grid item xs={12}>
+                  <TextField
+                    select
+                    margin="normal"
+                    // required
+                    fullWidth
+                    label={<span>Department<span style={{ color: 'red' }}>*</span></span>}
+                    name="department"
+                    size='small'
+                    id="department"
+                    value={department} // The department's ID will be stored here
+                    onChange={handleChange}
+                  >
+                    {allDepartment?.map((val) => (
+                      <MenuItem value={val?.id} key={val?.id}>
+                        {capitalizeFirstLetter(val?.department_name)} {/* Display department name */}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <TextField
+                    select
+                    margin="normal"
+                    // required
+                    fullWidth
+                    label={<span>Designation<span style={{ color: 'red' }}>*</span></span>}
+                    name="designation"
+                    size='small'
+                    id="designation"
+                    value={designation} // The designation's ID will be stored here
+                    onChange={handleChange}
+                  >
+                    {allDesignation?.map((val) => (
+                      <MenuItem value={val?.id} key={val?.id}>
+                        {capitalizeFirstLetter(val?.designation_name)} {/* Display designation name */}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    select
+                    margin="normal"
+                    // required
+                    fullWidth
+                    label={<span>Shift<span style={{ color: 'red' }}>*</span></span>}
+                    name="shift"
+                    size='small'
+                    id="shift"
+                    value={shift} // The designation's ID will be stored here
+                    onChange={handleChange}
+                  >
+                    {allShift?.map((val) => (
+                      <MenuItem value={val?.id} key={val?.id}>
+                        {`${val?.startTime}-${val?.endTime}`} {/* Display designation name */}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    select
+                    margin="normal"
+                    // required
+                    fullWidth
+                    label={<span>Employee Status<span style={{ color: 'red' }}>*</span></span>}
+                    name="status"
+                    size='small'
+                    id="status"
+                    value={status}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                  >
+                    <MenuItem value="active">Active</MenuItem>
+                    <MenuItem value="inactive">Inactive</MenuItem>
+                  </TextField>
+                </Grid>
                 <Grid item xs={12}>
                   <InputLabel sx={{ ml: 1 }}>DOB<span style={{ color: 'red' }}>*</span></InputLabel>
                   <TextField
@@ -689,6 +835,7 @@ const EmployeeModule = () => {
                     </RadioGroup>
                   </FormControl>
                 </Grid>
+
               </Grid>
             </form>
           }
@@ -762,6 +909,46 @@ const EmployeeModule = () => {
                     maxWidth: '800px',
                     boxShadow: 4,
                   }}><div> Role: {capitalizeFirstLetter(selectedUserdetail.role)} </div>
+                  </Typography>
+                  <Typography component="div" variant="subtitle1" sx={{
+                    fontSize: isSmallScreen ? '14px' : '18px', p: 2,
+                    borderRadius: 3,
+                    bgcolor: 'background.default',
+                    display: 'grid',
+                    gap: 0,
+                    maxWidth: '800px',
+                    boxShadow: 4,
+                  }}><div> Department: {capitalizeFirstLetter(selectedUserdetail?.department?.department_name)} </div>
+                  </Typography>
+                  <Typography component="div" variant="subtitle1" sx={{
+                    fontSize: isSmallScreen ? '14px' : '18px', p: 2,
+                    borderRadius: 3,
+                    bgcolor: 'background.default',
+                    display: 'grid',
+                    gap: 0,
+                    maxWidth: '800px',
+                    boxShadow: 4,
+                  }}><div> Designation: {capitalizeFirstLetter(selectedUserdetail?.designation?.designation_name)} </div>
+                  </Typography>
+                  <Typography component="div" variant="subtitle1" sx={{
+                    fontSize: isSmallScreen ? '14px' : '18px', p: 2,
+                    borderRadius: 3,
+                    bgcolor: 'background.default',
+                    display: 'grid',
+                    gap: 0,
+                    maxWidth: '800px',
+                    boxShadow: 4,
+                  }}><div> Designation: {`${selectedUserdetail?.shift?.startTime}-${selectedUserdetail?.shift?.endTime}`} </div>
+                  </Typography>
+                  <Typography component="div" variant="subtitle1" sx={{
+                    fontSize: isSmallScreen ? '14px' : '18px', p: 2,
+                    borderRadius: 3,
+                    bgcolor: 'background.default',
+                    display: 'grid',
+                    gap: 0,
+                    maxWidth: '800px',
+                    boxShadow: 4,
+                  }}><div> Staus: {capitalizeFirstLetter(selectedUserdetail?.status)} </div>
                   </Typography>
 
                   <Typography component="div" variant="subtitle1" sx={{
