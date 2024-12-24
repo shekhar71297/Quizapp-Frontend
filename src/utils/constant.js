@@ -23,7 +23,10 @@ export const urls = {
   course:'/api/course/',
   enquiry:'/api/enquiry/',
   enroll:'/api/enroll/',
-  loginUser:'/api/user/me/'
+  loginUser:'/api/user/me/',
+  designation:'/api/designation/',
+  department:'/api/department/',
+  shift:'/api/shift/'
 };
 
 //-------------------------Validation Regx----------------------//
@@ -43,7 +46,7 @@ export const isValidQuestion = (question) => /^[1-5]{1}$/.test(question);
 export const isValidMark = (mark) => /^[0-9]{1,2}$/.test(mark)
 export const isValidOtherBranch = (other) => /^[A-Za-z]{2,30}$/.test(other);
 export const isValidVoucher = (voucher) => /^[A-Z0-9]{6}$/.test(voucher);
-export const isValidFeedbackAns = (ans) =>/^[a-zA-Z]{2,500}$/.test(ans);
+export const isValidFeedbackAns = (ans) =>/^[a-zA-Z\- ]{2,500}$/.test(ans);
 export const isValidEmpId = (emp) => /^[0-9]{3}$/.test(emp);
 export const isValidBatchName = (batch) => /^[a-zA-Z0-9\- ]{2,30}$/.test(batch);
 

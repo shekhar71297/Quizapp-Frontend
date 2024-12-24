@@ -4,6 +4,9 @@ import { createSlice } from '@reduxjs/toolkit';
 const initialState = {
     name: 'employee',
     allEmployee: [],
+    allDesignation: [],
+    allDepartment:[],
+    allShift:[],
     emp: {},
     error: []
 };
@@ -33,7 +36,17 @@ export const employeeSlice = createSlice({
         singleEmployee: (state, action) => {
             const index = state.allEmployee.findIndex((d) => d.id === action.payload);
             state.emp = state.allEmployee[index];
+        },
+        getDesignation:(state,action)=>{
+            state.allDesignation = action.payload
+        },
+        getDepartment:(state,action)=>{
+            state.allDepartment = action.payload
+        },
+        getShift:(state,action)=>{
+            state.allShift = action.payload
         }
+        
         
     }
 });
